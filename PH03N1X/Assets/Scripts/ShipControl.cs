@@ -8,14 +8,24 @@ public class ShipControl : MonoBehaviour
     Camera playerCam;
 
     /* EDITOR PARAMETERS */
+    [SerializeField] GameObject playerBulletPrefab;
+    [SerializeField] Transform bulletSpawnLocation;
+
     [SerializeField] Vector2 startCenter;
     [SerializeField] float boundaryRadius = 4f;
 
+    [Header("Combat Parameters")]
+    [SerializeField] float fireRate = 0.8f;
+
+    [Header("Movement Parameters")]
     [SerializeField] float moveSpeed = 5f;
+    [SerializeField] float turnSpeed = 1f;
 
     /* PRIVATE VARIABLES */
     private float moveTimeLeft = 0f;
     private Vector2 moveDirection = Vector2.zero;
+    private GameObject[] bulletRefs = null;
+    private float fireRateTimer = 0f;
 
     void Awake()
     {
@@ -31,7 +41,28 @@ public class ShipControl : MonoBehaviour
     {
         SetAimDirection();
         SetMovementDirection();
+        TickFireRateTimer();
+        FireProjectile();
         GoToNextPosition();
+    }
+
+    /* PUBLIC FUNCTIONS */
+    public void SetShipParameters(int bullets, float rate, float move, float turn)
+    {
+        bulletRefs = new GameObject[bullets];
+        fireRate = rate;
+        moveSpeed = move;
+        turnSpeed = turn;
+    }
+
+    /* HELPER FUNCTIONS */
+    private void FireProjectile()
+    {
+        if (CanFireAShot() && Input.GetButtonDown("Fire"))
+        {
+            bulletRefs[FindEmptyBulletSlot()] = Instantiate(playerBulletPrefab, bulletSpawnLocation.position, this.transform.rotation);
+            SetFireRateTimer();
+        }
     }
 
     private void SetMovementDirection()
@@ -59,12 +90,12 @@ public class ShipControl : MonoBehaviour
             moveTimeLeft -= Time.deltaTime;
             if (moveTimeLeft < 0f)
             {
-                ResetTimerAndDirection();
+                ResetMoveTimerAndDirection();
             }
         }
         else
         {
-            ResetTimerAndDirection();
+            ResetMoveTimerAndDirection();
         }
     }
 
@@ -81,7 +112,7 @@ public class ShipControl : MonoBehaviour
             }
             else
             {
-                ResetTimerAndDirection();
+                ResetMoveTimerAndDirection();
             }
         }
     }
@@ -90,14 +121,45 @@ public class ShipControl : MonoBehaviour
     {
         Vector3 mouseLocation = playerCam.ScreenToWorldPoint(Input.mousePosition);
         Vector3 direction = mouseLocation - this.transform.position;
-        float angle = (Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg) - 90f;
-        this.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+        direction.z = 0f;
+
+        Vector3 newRotation = Vector3.RotateTowards(this.transform.up, direction.normalized, turnSpeed * Time.deltaTime, 0.0f);
+        this.transform.up = newRotation;
     }
 
-    private void ResetTimerAndDirection()
+    private void ResetMoveTimerAndDirection()
     {
         moveTimeLeft = 0f;
         moveDirection.x = 0f;
         moveDirection.y = 0f;
+    }
+
+    private bool CanFireAShot()
+    {
+        return fireRateTimer <= 0f && FindEmptyBulletSlot() > -1;
+    }
+
+    private int FindEmptyBulletSlot()
+    {
+        for (int i = 0; i < bulletRefs.Length; ++i)
+        {
+            if (bulletRefs[i] == null) { return i; }
+        }
+
+        return -1;
+    }
+
+    private void SetFireRateTimer()
+    {
+        fireRateTimer = fireRate;
+    }
+
+    private void TickFireRateTimer()
+    {
+        if (fireRateTimer > 0f)
+        {
+            fireRateTimer -= Time.deltaTime;
+            if (fireRateTimer < 0f) { fireRateTimer = 0f; }
+        }
     }
 }
