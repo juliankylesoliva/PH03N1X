@@ -55,6 +55,11 @@ public class ShipControl : MonoBehaviour
         turnSpeed = turn;
     }
 
+    public void KillShip()
+    {
+        GameObject.Destroy(this.gameObject);
+    }
+
     /* HELPER FUNCTIONS */
     private void FireProjectile()
     {

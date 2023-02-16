@@ -8,6 +8,7 @@ public class Flierwerk : MonoBehaviour
 
     [SerializeField] protected GameObject shrapnelPrefab;
     [SerializeField] Sprite[] animSprites;
+    [SerializeField] int pointValue = 10;
     [SerializeField] int spriteChangeFrameInterval = 30;
     [SerializeField, Range(0f, 1f)] float distancePortion = 1f;
     [SerializeField] float attackWindup = 1f;
@@ -17,6 +18,8 @@ public class Flierwerk : MonoBehaviour
     [SerializeField] int arcOfShotSpread = 90;
     [SerializeField] float aimOffset = 0f;
 
+    private SwarmDirector director = null;
+    private int positionID = -1;
     private GameObject playerRef = null;
     private Vector3 playerPosition = Vector3.zero;
     private Vector3 targetDirection = Vector3.zero;
@@ -33,28 +36,41 @@ public class Flierwerk : MonoBehaviour
         frameTimer = spriteChangeFrameInterval;
     }
 
-    void Update() // Do idle animation while looking at the center point of the swarm
+    void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R)) { Attack(); } // Testing
-
         if (!isAttacking)
         {
             this.transform.up = (Vector3.zero - this.transform.position).normalized;
+            this.transform.position = director.GetPositionByID(positionID);
             CheckSpriteChange();
             --frameTimer;
         }
+    }
+
+    public void SetDirector(SwarmDirector d)
+    {
+        if (d != null) { director = d; }
+    }
+
+    public void SetPositionID(int id)
+    {
+        positionID = id;
+    }
+
+    public bool GetIsAttacking()
+    {
+        return isAttacking;
     }
 
     public void Attack()
     {
         if (isAttacking) { return; }
         isAttacking = true;
-        StartCoroutine(AttackCR());
+        StartCoroutine("AttackCR");
     }
 
     protected IEnumerator AttackCR()
     {
-        // Play flashing red animation while pointing at the player's location or target location
         spriteRenderer.sprite = animSprites[0];
         spriteRenderer.color = Color.red;
         float currentWindupTimer = attackWindup;
@@ -94,6 +110,13 @@ public class Flierwerk : MonoBehaviour
         yield break;
     }
 
+    public void KillEnemy()
+    {
+        if (isAttacking) { StopCoroutine("AttackCR"); }
+        GameObject.Destroy(this.gameObject);
+        // Add point value to score if idle. Add double point value to score if attacking.
+    }
+
     private void FireShrapnel()
     {
         int increment = (arcOfShotSpread / numberOfShrapnel);
@@ -126,6 +149,17 @@ public class Flierwerk : MonoBehaviour
         {
             spriteRenderer.sprite = (spriteRenderer.sprite == animSprites[0] ? animSprites[1] : animSprites[0]);
             frameTimer = (spriteChangeFrameInterval / (halved ? 2 : 1));
+        }
+    }
+
+    void OnCollisionEnter2D(Collision2D other)
+    {
+        if (other.gameObject.tag == "Player")
+        {
+            ShipControl tempShip = other.gameObject.GetComponent<ShipControl>();
+            if (tempShip != null) { tempShip.KillShip(); }
+            if (isAttacking) { StopCoroutine("AttackCR"); }
+            GameObject.Destroy(this.gameObject);
         }
     }
 }

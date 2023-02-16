@@ -7,6 +7,8 @@ public class Projectile : MonoBehaviour
     [SerializeField] float projectileSpeed = 5f;
     [SerializeField] float despawnBoundary = 10f;
 
+    private bool isGrazed = false;
+
     void Start()
     {
         
@@ -21,7 +23,41 @@ public class Projectile : MonoBehaviour
         }
         else
         {
+            // Break combo
             GameObject.Destroy(this.gameObject);
         }
+    }
+
+    public bool GetIsGrazed()
+    {
+        return isGrazed;
+    }
+
+    public void SetIsGrazed()
+    {
+        isGrazed = true;
+    }
+
+    void OnCollisionEnter2D(Collision2D other)
+    {
+        if (this.gameObject.tag == "PlayerProjectile" && other.gameObject.tag == "Enemy")
+        {
+            Flierwerk tempEnemy = other.gameObject.GetComponent<Flierwerk>();
+            if (tempEnemy != null) { tempEnemy.KillEnemy(); }
+            // Add to combo
+            GameObject.Destroy(this.gameObject);
+        }
+        else if (this.gameObject.tag == "EnemyProjectile" && other.gameObject.tag == "Player")
+        {
+            ShipControl tempShip = other.gameObject.GetComponent<ShipControl>();
+            if (tempShip != null) { tempShip.KillShip(); }
+            GameObject.Destroy(this.gameObject);
+        }
+        else { /* Nothing */ }
+    }
+
+    void OnCollisionExit2D(Collision2D other)
+    {
+
     }
 }
