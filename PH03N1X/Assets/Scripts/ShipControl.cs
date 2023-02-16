@@ -11,6 +11,7 @@ public class ShipControl : MonoBehaviour
     [SerializeField] GameObject playerBulletPrefab;
     [SerializeField] Transform bulletSpawnLocation;
 
+    [SerializeField] float readyPlayerDuration = 3f;
     [SerializeField] Vector2 startCenter;
     [SerializeField] float boundaryRadius = 4f;
 
@@ -22,6 +23,7 @@ public class ShipControl : MonoBehaviour
     [SerializeField] float turnSpeed = 1f;
 
     /* PRIVATE VARIABLES */
+    private float currentReadyPlayerTimer = 0f;
     private float moveTimeLeft = 0f;
     private Vector2 moveDirection = Vector2.zero;
     private GameObject[] bulletRefs = null;
@@ -34,11 +36,13 @@ public class ShipControl : MonoBehaviour
 
     void Start()
     {
+        currentReadyPlayerTimer = readyPlayerDuration;
         this.transform.position = new Vector3(startCenter.x, startCenter.y, 0f);
     }
 
     void Update()
     {
+        TickReadyPlayerTimer();
         SetAimDirection();
         SetMovementDirection();
         TickFireRateTimer();
@@ -55,12 +59,30 @@ public class ShipControl : MonoBehaviour
         turnSpeed = turn;
     }
 
+    public bool GetIsPlayerReady()
+    {
+        return currentReadyPlayerTimer <= 0f;
+    }
+
     public void KillShip()
     {
+        Scorekeeper.BreakCombo();
         GameObject.Destroy(this.gameObject);
     }
 
     /* HELPER FUNCTIONS */
+    private void TickReadyPlayerTimer()
+    {
+        if (currentReadyPlayerTimer > 0f)
+        {
+            currentReadyPlayerTimer -= Time.deltaTime;
+            if (currentReadyPlayerTimer < 0f)
+            {
+                currentReadyPlayerTimer = 0f;
+            }
+        }
+    }
+
     private void FireProjectile()
     {
         if (CanFireAShot() && Input.GetButtonDown("Fire"))
@@ -141,7 +163,7 @@ public class ShipControl : MonoBehaviour
 
     private bool CanFireAShot()
     {
-        return fireRateTimer <= 0f && FindEmptyBulletSlot() > -1;
+        return GetIsPlayerReady() && fireRateTimer <= 0f && FindEmptyBulletSlot() > -1;
     }
 
     private int FindEmptyBulletSlot()

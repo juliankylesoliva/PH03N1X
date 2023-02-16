@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class GrazeZone : MonoBehaviour
 {
-
     void OnTriggerExit2D(Collider2D other)
     {
         if (other.gameObject.tag == "EnemyProjectile")
@@ -13,8 +12,7 @@ public class GrazeZone : MonoBehaviour
             if (projTemp != null && !projTemp.GetIsGrazed())
             {
                 projTemp.SetIsGrazed();
-                Debug.Log("Graze!");
-                // Add to score
+                Scorekeeper.AddGraze();
             }
         }
     }

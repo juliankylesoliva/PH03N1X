@@ -74,7 +74,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -744519815
-  m_SortingLayer: -1
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 675d5ee0e95276144896b6c04a27ad46, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -103,6 +103,7 @@ MonoBehaviour:
   animSprites:
   - {fileID: 21300000, guid: 675d5ee0e95276144896b6c04a27ad46, type: 3}
   - {fileID: 21300000, guid: 54512908029d4a740bbcafbe5ced656f, type: 3}
+  pointValue: 25
   spriteChangeFrameInterval: 20
   distancePortion: 0.4
   attackWindup: 2.8

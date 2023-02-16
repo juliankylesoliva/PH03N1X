@@ -9,6 +9,7 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] int[] upgradeLevels = new int[6];
 
     private GameObject playerRef = null;
+    private static ShipControl _playerRef = null;
 
     [Header("Upgrade Tables")]
     [SerializeField] int[] maxBulletsUpgradeTable;
@@ -30,6 +31,7 @@ public class PlayerSpawner : MonoBehaviour
         {
             playerRef = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
             ShipControl tempShip = playerRef.GetComponent<ShipControl>();
+            _playerRef = tempShip;
             tempShip.SetShipParameters(maxBulletsUpgradeTable[upgradeLevels[0]], fireRateUpgradeTable[upgradeLevels[1]], moveSpeedUpgradeTable[upgradeLevels[2]], turnSpeedUpgradeTable[upgradeLevels[4]]);
         }
     }
@@ -40,6 +42,11 @@ public class PlayerSpawner : MonoBehaviour
         {
             upgradeLevels[index]++;
         }
+    }
+
+    public static ShipControl GetPlayerRef()
+    {
+        return _playerRef;
     }
 
     private void CheckInitialUpgradeLevels()

@@ -9,8 +9,6 @@ public class SwarmDirector : MonoBehaviour
 
     [SerializeField] int seed = 0;
 
-    [SerializeField] float readyPlayerDuration = 3f;
-
     [SerializeField] float startingRadius = 5f;
     [SerializeField] float radiusAmplitude = 1f;
     [SerializeField] float radiusChangeSineDegrees = 30f;
@@ -24,8 +22,7 @@ public class SwarmDirector : MonoBehaviour
     [SerializeField] float maxAttackInterval = 6f;
     [SerializeField] float attackIntervalChange = 0.25f;
 
-    private GameObject playerRef = null;
-    private float currentReadyPlayerTimer = 0f;
+    private bool isSpawningEnemies = false;
 
     private float currentRadius = 0f;
     private float currentRadiusTheta = 0f;
@@ -45,8 +42,6 @@ public class SwarmDirector : MonoBehaviour
     {
         Random.InitState(seed);
 
-        currentReadyPlayerTimer = readyPlayerDuration;
-
         currentRadius = startingRadius;
         currentRadiusTheta = 0f;
 
@@ -62,14 +57,12 @@ public class SwarmDirector : MonoBehaviour
 
         positionVectors = new Vector2[(4 * enemyGroupsToSpawn)];
         UpdatePositionVectors();
-        SpawnEnemyGroups();
+        StartCoroutine(SpawnEnemyGroups());
     }
 
     void Update()
     {
-        if (playerRef != null && currentReadyPlayerTimer <= 0f) { TryEnemyAttack(); }
-        else if (currentReadyPlayerTimer > 0f) { currentReadyPlayerTimer -= Time.deltaTime; if (currentReadyPlayerTimer < 0f) { currentReadyPlayerTimer = 0; } }
-        else { CheckPlayerStatus(); }
+        if (!isSpawningEnemies && PlayerSpawner.GetPlayerRef() != null && PlayerSpawner.GetPlayerRef().GetIsPlayerReady()) { TryEnemyAttack(); }
 
         currentRadius = ((radiusAmplitude * Mathf.Sin(currentRadiusTheta)) + startingRadius);
         currentRotationSpeed = (rotationSpeedDegreesAmplitude * Mathf.Sin(currentRotationSpeedTheta) * Mathf.Deg2Rad);
@@ -92,15 +85,6 @@ public class SwarmDirector : MonoBehaviour
         if (enemyRefs.ContainsKey(id))
         {
             enemyRefs.Remove(id);
-        }
-    }
-
-    private void CheckPlayerStatus()
-    {
-        if (playerRef == null)
-        {
-            playerRef = GameObject.FindWithTag("Player");
-            if (playerRef != null) { currentReadyPlayerTimer = readyPlayerDuration; }
         }
     }
 
@@ -153,8 +137,11 @@ public class SwarmDirector : MonoBehaviour
         }
     }
 
-    private void SpawnEnemyGroups()
+    private IEnumerator SpawnEnemyGroups()
     {
+        if (isSpawningEnemies) { yield break; }
+        isSpawningEnemies = true;
+
         List<int> remainingNumbers = new List<int>();
         for (int i = 0; i < 4; ++i) { remainingNumbers.Add(i); }
 
@@ -173,6 +160,11 @@ public class SwarmDirector : MonoBehaviour
             {
                 for (int j = 0; j < 4; ++j) { remainingNumbers.Add(j); }
             }
+
+            for (int j = 0; j < 3; ++j) { yield return null; }
         }
+
+        isSpawningEnemies = false;
+        yield break;
     }
 }

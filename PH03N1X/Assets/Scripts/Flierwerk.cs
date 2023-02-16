@@ -20,7 +20,6 @@ public class Flierwerk : MonoBehaviour
 
     private SwarmDirector director = null;
     private int positionID = -1;
-    private GameObject playerRef = null;
     private Vector3 playerPosition = Vector3.zero;
     private Vector3 targetDirection = Vector3.zero;
     private bool isAttacking = false;
@@ -78,8 +77,8 @@ public class Flierwerk : MonoBehaviour
 
         while (currentWindupTimer > 0f)
         {
-            UpdatePlayerRef();
-            if (playerRef != null) { playerPosition = (playerRef.transform.position + (playerRef.transform.up * playerPositionOffset.y) + (playerRef.transform.right * playerPositionOffset.x)); }
+            ShipControl ctrl = PlayerSpawner.GetPlayerRef();
+            if (ctrl != null) { playerPosition = (ctrl.transform.position + (ctrl.transform.up * playerPositionOffset.y) + (ctrl.transform.right * playerPositionOffset.x)); }
             targetDirection = (playerPosition - this.transform.position);
             this.transform.up = targetDirection.normalized;
 
@@ -114,7 +113,7 @@ public class Flierwerk : MonoBehaviour
     {
         if (isAttacking) { StopCoroutine("AttackCR"); }
         GameObject.Destroy(this.gameObject);
-        // Add point value to score if idle. Add double point value to score if attacking.
+        Scorekeeper.AddToScore(pointValue * (isAttacking ? 2 : 1), true);
     }
 
     private void FireShrapnel()
@@ -123,14 +122,6 @@ public class Flierwerk : MonoBehaviour
         for (int i = 0; i < arcOfShotSpread; i += increment)
         {
             Instantiate(shrapnelPrefab, this.transform.position, this.transform.rotation * Quaternion.Euler(0f, 0f, (float)i + aimOffset));
-        }
-    }
-
-    private void UpdatePlayerRef()
-    {
-        if (isAttacking && playerRef == null)
-        {
-            playerRef = GameObject.FindWithTag("Player");
         }
     }
 

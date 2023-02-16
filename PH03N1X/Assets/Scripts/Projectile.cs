@@ -23,7 +23,7 @@ public class Projectile : MonoBehaviour
         }
         else
         {
-            // Break combo
+            Scorekeeper.BreakCombo();
             GameObject.Destroy(this.gameObject);
         }
     }
@@ -44,7 +44,7 @@ public class Projectile : MonoBehaviour
         {
             Flierwerk tempEnemy = other.gameObject.GetComponent<Flierwerk>();
             if (tempEnemy != null) { tempEnemy.KillEnemy(); }
-            // Add to combo
+            Scorekeeper.AddToCombo();
             GameObject.Destroy(this.gameObject);
         }
         else if (this.gameObject.tag == "EnemyProjectile" && other.gameObject.tag == "Player")
