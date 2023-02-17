@@ -9,26 +9,10 @@ public class SwarmDirector : MonoBehaviour
     [SerializeField] bool reversePositionDirection = true;
     [SerializeField] Vector3 centerPoint;
 
-    // TODO: Copy and paste these in a scriptable object, then keep a list of them to act as "rounds"
-    [SerializeField] int seed = 0;
+    [SerializeField] SwarmDirections[] roundList;
 
-    [SerializeField] float startingRadius = 5f;
-    [SerializeField] float radiusAmplitude = 1f;
-    [SerializeField] float radiusChangeSineDegrees = 30f;
-    [SerializeField] float retreatRadius = 3f;
-    [SerializeField] float retreatTime = 5f;
-
-    [SerializeField] float rotationSpeedDegreesAmplitude = 30f;
-    [SerializeField] float rotationSpeedSineDegrees = 15f;
-
-    [SerializeField, Range(4, 16)] int enemyGroupsToSpawn = 1;
-    [SerializeField] float setupTime = 2f;
-
-    [SerializeField, Range(1, 4)] int maxGroupSizePerAttack = 1;
-    [SerializeField] float minAttackInterval = 3f;
-    [SerializeField] float maxAttackInterval = 6f;
-    [SerializeField] float attackIntervalChange = 0.25f;
-    // ...End the scriptable object here
+    private int currentRound = 0;
+    private SwarmDirections dirs = null;
 
     private bool isSpawningEnemies = false;
 
@@ -49,25 +33,7 @@ public class SwarmDirector : MonoBehaviour
 
     void Start()
     {
-        // TODO: Put this all in an initialization function
-        Random.InitState(seed);
-
-        currentRadius = startingRadius;
-        currentRadiusTheta = 0f;
-
-        currentRotationSpeed = 0f;
-        currentRotationSpeedTheta = 0f;
-        currentRotationOffset = 0f;
-
-        currentAttackInterval = minAttackInterval;
-        currentIntervalChangeDirection = 1f;
-        currentAttackTimer = currentAttackInterval;
-        if (enemyRefs == null) { enemyRefs = new Dictionary<int, Flierwerk>(); }
-        else { enemyRefs.Clear(); }
-
-        positionVectors = new Vector2[(4 * enemyGroupsToSpawn)];
-        UpdatePositionVectors();
-        StartCoroutine(SpawnEnemyGroups());
+        InitializeSwarm(roundList[currentRound]);
     }
 
     void Update()
@@ -76,14 +42,14 @@ public class SwarmDirector : MonoBehaviour
 
         if (!isSpawningEnemies && PlayerSpawner.GetPlayerRef() != null && PlayerSpawner.GetPlayerRef().GetIsPlayerReady()) { TryEnemyAttack(); }
 
-        currentRadius = ((radiusAmplitude * Mathf.Sin(currentRadiusTheta)) + startingRadius) * Mathf.Lerp(1, retreatRadius, currentRadiusScaleLerp);
-        currentRotationSpeed = (rotationSpeedDegreesAmplitude * Mathf.Sin(currentRotationSpeedTheta) * Mathf.Deg2Rad);
+        currentRadius = ((dirs.radiusAmplitude * Mathf.Sin(currentRadiusTheta)) + dirs.startingRadius) * Mathf.Lerp(1, dirs.retreatRadius, currentRadiusScaleLerp);
+        currentRotationSpeed = (dirs.rotationSpeedDegreesAmplitude * Mathf.Sin(currentRotationSpeedTheta) * Mathf.Deg2Rad);
         currentRotationOffset += (currentRotationSpeed * Time.deltaTime);
 
         UpdatePositionVectors();
 
-        currentRadiusTheta += (radiusChangeSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
-        currentRotationSpeedTheta += (rotationSpeedSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
+        currentRadiusTheta += (dirs.radiusChangeSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
+        currentRotationSpeedTheta += (dirs.rotationSpeedSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
     }
 
     public Vector3 GetPositionByID(int id)
@@ -119,6 +85,30 @@ public class SwarmDirector : MonoBehaviour
         return (testProj != null);
     }
 
+    private void InitializeSwarm(SwarmDirections d)
+    {
+        dirs = d;
+
+        if (d.seed >= 0) { Random.InitState(d.seed); }
+
+        currentRadius = d.startingRadius;
+        currentRadiusTheta = 0f;
+
+        currentRotationSpeed = 0f;
+        currentRotationSpeedTheta = 0f;
+        currentRotationOffset = 0f;
+
+        currentAttackInterval = d.minAttackInterval;
+        currentIntervalChangeDirection = 1f;
+        currentAttackTimer = currentAttackInterval;
+        if (enemyRefs == null) { enemyRefs = new Dictionary<int, Flierwerk>(); }
+        else { enemyRefs.Clear(); }
+
+        positionVectors = new Vector2[(4 * d.enemyGroupsToSpawn)];
+        UpdatePositionVectors();
+        StartCoroutine(SpawnEnemyGroups());
+    }
+
     private void TryEnemyAttack()
     {
         if (currentAttackTimer > 0f)
@@ -127,7 +117,7 @@ public class SwarmDirector : MonoBehaviour
         }
         else
         {
-            for (int i = 0; i < (maxGroupSizePerAttack > 1 ? Random.Range(1, maxGroupSizePerAttack + 1) : 1); ++i)
+            for (int i = 0; i < (dirs.maxGroupSizePerAttack > 1 ? Random.Range(1, dirs.maxGroupSizePerAttack + 1) : 1); ++i)
             {
                 if (enemyRefs.Keys.Count == 0) { return; }
                 int[] tempIDs = new int[enemyRefs.Keys.Count];
@@ -140,15 +130,15 @@ public class SwarmDirector : MonoBehaviour
                 chosenEnemy.Attack();
             }
 
-            currentAttackInterval += (Mathf.Abs(attackIntervalChange) * currentIntervalChangeDirection);
-            if (currentAttackInterval > maxAttackInterval)
+            currentAttackInterval += (Mathf.Abs(dirs.attackIntervalChange) * currentIntervalChangeDirection);
+            if (currentAttackInterval > dirs.maxAttackInterval)
             {
-                currentAttackInterval = maxAttackInterval;
+                currentAttackInterval = dirs.maxAttackInterval;
                 currentIntervalChangeDirection *= -1f;
             }
-            else if (currentAttackInterval < minAttackInterval)
+            else if (currentAttackInterval < dirs.minAttackInterval)
             {
-                currentAttackInterval = minAttackInterval;
+                currentAttackInterval = dirs.minAttackInterval;
                 currentIntervalChangeDirection *= -1f;
             }
             else { /* Nothing */ }
@@ -163,7 +153,7 @@ public class SwarmDirector : MonoBehaviour
         {
             if (currentRadiusScaleLerp < 1f)
             {
-                currentRadiusScaleLerp += (Time.deltaTime / retreatTime);
+                currentRadiusScaleLerp += (Time.deltaTime / dirs.retreatTime);
                 if (currentRadiusScaleLerp > 1f)
                 {
                     currentRadiusScaleLerp = 1f;
@@ -174,7 +164,7 @@ public class SwarmDirector : MonoBehaviour
         {
             if (currentRadiusScaleLerp > 0f)
             {
-                currentRadiusScaleLerp -= (Time.deltaTime / setupTime);
+                currentRadiusScaleLerp -= (Time.deltaTime / dirs.setupTime);
                 if (currentRadiusScaleLerp < 0f)
                 {
                     currentRadiusScaleLerp = 0f;
@@ -221,7 +211,7 @@ public class SwarmDirector : MonoBehaviour
                 for (int j = 0; j < 4; ++j) { remainingNumbers.Add(j); }
             }
 
-            if (i < (positionVectors.Length - 1)) { yield return new WaitForSeconds(setupTime / positionVectors.Length); }
+            if (i < (positionVectors.Length - 1)) { yield return new WaitForSeconds(dirs.setupTime / positionVectors.Length); }
         }
 
         isSpawningEnemies = false;

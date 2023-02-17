@@ -8,6 +8,7 @@ public class PlayerSpawner : MonoBehaviour
 {
     [Header("Drag and Drop")]
     [SerializeField] GameObject playerPrefab;
+    [SerializeField] GameObject readyText;
     [SerializeField] Image screenFade;
     [SerializeField] GameObject grandTotalScoreText;
     [SerializeField] GameObject thisLifeScoreText;
@@ -15,6 +16,8 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] TMP_Text totalAshesNumber;
     [SerializeField] TMP_Text livesRemainingText;
 
+    [SerializeField] GameObject upgradeScreen;
+    [SerializeField] TMP_Text ashesUpgradeDisplayText;
     [SerializeField] TMP_Text maxBulletUpgradeText;
     [SerializeField] TMP_Text fireRateUpgradeText;
     [SerializeField] TMP_Text moveSpeedUpgradeText;
@@ -22,8 +25,6 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] TMP_Text ashRateUpgradeText;
     [SerializeField] TMP_Text maxComboUpgradeText;
     [SerializeField] TMP_Text extraLifeText;
-    [SerializeField] TMP_Text repawnText;
-    [SerializeField] TMP_Text undoText;
 
     [Header("Game Parameters")]
     [SerializeField, Range(1, 5)] int startingLives = 3;
@@ -35,6 +36,9 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] int[] baseUpgradeCosts;
     [SerializeField] float upgradeCostGrowthRate = 1.05f;
     [SerializeField] int[] upgradeLevels = new int[6];
+
+    [Header("Miscellaneous")]
+    [SerializeField] float readyTextDuration = 3f;
 
     [Header("Upgrade Tables")]
     [SerializeField] int[] maxBulletsUpgradeTable;
@@ -53,8 +57,12 @@ public class PlayerSpawner : MonoBehaviour
     private int currentAshes = 0;
     private int livesBought = 0;
 
+    private TMP_Text[] upgradeTextRefs;
+
     void Start()
     {
+        upgradeTextRefs = new TMP_Text[7] { maxBulletUpgradeText, fireRateUpgradeText, moveSpeedUpgradeText, turnSpeedUpgradeText, ashRateUpgradeText, maxComboUpgradeText, extraLifeText };
+
         livesLeft = startingLives;
         CheckInitialUpgradeLevels();
         SpawnPlayer();
@@ -77,6 +85,7 @@ public class PlayerSpawner : MonoBehaviour
             _playerRef = tempShip;
             tempShip.SetShipParameters(maxBulletsUpgradeTable[upgradeLevels[0]], fireRateUpgradeTable[upgradeLevels[1]], moveSpeedUpgradeTable[upgradeLevels[2]], turnSpeedUpgradeTable[upgradeLevels[4]]);
             Scorekeeper.SetMaxMultiplier(MaxComboMultiplierUpgradeTable[upgradeLevels[5]]);
+            StartCoroutine(DisplayReadyText());
         }
     }
 
@@ -103,14 +112,11 @@ public class PlayerSpawner : MonoBehaviour
         }
     }
 
-    private int GetNumberOfUpgradesBought()
+    private IEnumerator DisplayReadyText()
     {
-        int sum = 0;
-        foreach (int i in upgradeLevels)
-        {
-            sum += i;
-        }
-        return sum;
+        readyText.SetActive(true);
+        yield return new WaitForSeconds(readyTextDuration);
+        readyText.SetActive(false);
     }
 
     private IEnumerator UpgradePhase() // TODO
@@ -172,14 +178,105 @@ public class PlayerSpawner : MonoBehaviour
         livesRemainingText.gameObject.SetActive(false);
 
         // Show list of upgrades, wait for player to finish
+        upgradeScreen.SetActive(true);
+        int currentSelection = 0;
         bool isPlayerFinished = false;
+        float previousYAxis = 0f;
+        List<int> previousUpgrades = new List<int>();
         while (!isPlayerFinished)
         {
+            ashesUpgradeDisplayText.text = $"ASHES LEFT: {currentAshes.ToString("D7")}";
 
+            maxBulletUpgradeText.text   = $"MAX BULLET UP [LV. {upgradeLevels[0]}]:  {(upgradeLevels[0] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[0]) : "MAX")}";
+            fireRateUpgradeText.text    = $"FIRE RATE UP  [LV. {upgradeLevels[1]}]:  {(upgradeLevels[1] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[1]) : "MAX")}";
+            moveSpeedUpgradeText.text   = $"MOVE SPEED UP [LV. {upgradeLevels[2]}]:  {(upgradeLevels[2] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[2]) : "MAX")}";
+            turnSpeedUpgradeText.text   = $"TURN SPEED UP [LV. {upgradeLevels[3]}]:  {(upgradeLevels[3] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[3]) : "MAX")}";
+            ashRateUpgradeText.text     = $"ASH RATE UP   [LV. {upgradeLevels[4]}]:  {(upgradeLevels[4] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[4]) : "MAX")}";
+            maxComboUpgradeText.text    = $"MAX COMBO UP  [LV. {upgradeLevels[5]}]:  {(upgradeLevels[5] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[5]) : "MAX")}";
+            extraLifeText.text          = $"EXTRA LIFE    [{livesLeft} LEFT]: {GetExtraLifeCost()}";
 
+            for (int i = 0; i < upgradeTextRefs.Length; ++i)
+            {
+                upgradeTextRefs[i].color = (i == currentSelection ? Color.red : Color.white);
+            }
 
+            if (Input.GetButtonDown("Submit"))
+            {
+                isPlayerFinished = true;
+                continue;
+            }
+            else if (previousYAxis == 0f && Input.GetAxisRaw("Vertical") != 0f)
+            {
+                if (Input.GetAxisRaw("Vertical") > 0f)
+                {
+                    currentSelection--;
+                    if (currentSelection < 0)
+                    {
+                        currentSelection = (upgradeTextRefs.Length - 1);
+                    }
+                }
+                else
+                {
+                    currentSelection++;
+                    if (currentSelection >= upgradeTextRefs.Length)
+                    {
+                        currentSelection = 0;
+                    }
+                }
+            }
+            else if (Input.GetButtonDown("Confirm"))
+            {
+                bool isExtraLife = currentSelection >= (upgradeTextRefs.Length - 1);
+                int cost = (!isExtraLife ? GetUpgradeCost(upgradeLevels[currentSelection]) : GetExtraLifeCost());
+                if (currentAshes >= cost)
+                {
+                    currentAshes -= cost;
+                    if (isExtraLife)
+                    {
+                        livesLeft++;
+                        livesBought++;
+                    }
+                    else
+                    {
+                        upgradeLevels[currentSelection]++;
+                    }
+                    previousUpgrades.Insert(0, currentSelection);
+                }
+                else
+                {
+                    // Buzzer sound
+                }
+            }
+            else if (Input.GetButtonDown("Cancel"))
+            {
+                if (previousUpgrades.Count > 0)
+                {
+                    int selectionToUndo = previousUpgrades[0];
+                    previousUpgrades.RemoveAt(0);
+
+                    if (selectionToUndo >= (upgradeTextRefs.Length - 1))
+                    {
+                        livesLeft--;
+                        livesBought--;
+                        currentAshes += GetExtraLifeCost();
+                    }
+                    else
+                    {
+                        upgradeLevels[selectionToUndo]--;
+                        currentAshes += GetUpgradeCost(upgradeLevels[selectionToUndo]);
+                    }
+                }
+                else
+                {
+                    // Buzzer sound
+                }
+            }
+            else { /* Nothing */ }
+
+            previousYAxis = Input.GetAxisRaw("Vertical");
             yield return null;
         }
+        upgradeScreen.SetActive(false);
 
 
         // Undarken the screen
@@ -205,6 +302,26 @@ public class PlayerSpawner : MonoBehaviour
 
         isUpgrading = false;
         yield return null;
+    }
+
+    private int GetUpgradeCost(int level)
+    {
+        if (level >= maxUpgradeLevel) { return -1; }
+
+        int sum = 0;
+        foreach (int i in upgradeLevels)
+        {
+            sum += i;
+        }
+
+        int result = (int)(baseUpgradeCosts[level] * Mathf.Pow(upgradeCostGrowthRate, (float)sum));
+        return (result - (result % 5));
+    }
+
+    private int GetExtraLifeCost()
+    {
+        int result = extraLifeBaseCost + (livesBought * extraLifeCostIncrement);
+        return Mathf.Min(maxExtraLifeCost, result);
     }
 
     private int GetAshesFromLifeScore()
