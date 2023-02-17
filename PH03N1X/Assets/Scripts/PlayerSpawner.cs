@@ -119,7 +119,7 @@ public class PlayerSpawner : MonoBehaviour
         readyText.SetActive(false);
     }
 
-    private IEnumerator UpgradePhase() // TODO
+    private IEnumerator UpgradePhase()
     {
         isUpgrading = true;
 
@@ -144,31 +144,35 @@ public class PlayerSpawner : MonoBehaviour
         yield return new WaitForSeconds(0.6f);
         thisLifeScoreText.SetActive(true);
         yield return new WaitForSeconds(0.6f);
+        totalAshesNumber.text = currentAshes.ToString("D7");
         totalAshesText.SetActive(true);
         yield return new WaitForSeconds(1f);
 
         int ashesToTransfer = GetAshesFromLifeScore();
 
+        int interval = (int)Mathf.Pow(10f, Mathf.Log(Scorekeeper.GetThisLifeScore() / 10f, 10f));
         while (Scorekeeper.GetThisLifeScore() > 0)
         {
-            Scorekeeper.DecrementThisLifeScore(10);
+            Scorekeeper.DecrementThisLifeScore(interval);
             yield return null;
         }
         yield return new WaitForSeconds(1f);
-        while (ashesToTransfer > 0)
+        int targetAshes = (currentAshes + ashesToTransfer);
+        while (currentAshes < targetAshes)
         {
-            ashesToTransfer -= 5;
-            currentAshes += 5;
+            currentAshes += interval;
+            if (currentAshes > targetAshes) { currentAshes = targetAshes; }
             totalAshesNumber.text = currentAshes.ToString("D7");
             yield return null;
         }
         yield return new WaitForSeconds(1f);
 
+        if (livesLeft > 0)
+        {
+            --livesLeft;
+            livesRemainingText.text = $"YOU HAVE {livesLeft} LI{(livesLeft > 1 || livesLeft == 0 ? "VES" : "FE")} REMAINING";
+        }
         livesRemainingText.gameObject.SetActive(true);
-        livesRemainingText.text = $"YOU HAVE {livesLeft} LI{(livesLeft > 1 || livesLeft == 0 ? "VES" : "FE")} REMAINING";
-        yield return new WaitForSeconds(0.5f);
-        if (livesLeft > 0) { --livesLeft; }
-        livesRemainingText.text = $"YOU HAVE {livesLeft} LI{(livesLeft > 1 || livesLeft == 0 ? "VES" : "FE")} REMAINING";
 
         yield return new WaitForSeconds(2f);
 
@@ -226,21 +230,28 @@ public class PlayerSpawner : MonoBehaviour
             }
             else if (Input.GetButtonDown("Confirm"))
             {
-                bool isExtraLife = currentSelection >= (upgradeTextRefs.Length - 1);
-                int cost = (!isExtraLife ? GetUpgradeCost(upgradeLevels[currentSelection]) : GetExtraLifeCost());
-                if (currentAshes >= cost)
+                if (upgradeLevels[currentSelection] < maxUpgradeLevel)
                 {
-                    currentAshes -= cost;
-                    if (isExtraLife)
+                    bool isExtraLife = currentSelection >= (upgradeTextRefs.Length - 1);
+                    int cost = (!isExtraLife ? GetUpgradeCost(upgradeLevels[currentSelection]) : GetExtraLifeCost());
+                    if (currentAshes >= cost)
                     {
-                        livesLeft++;
-                        livesBought++;
+                        currentAshes -= cost;
+                        if (isExtraLife)
+                        {
+                            livesLeft++;
+                            livesBought++;
+                        }
+                        else
+                        {
+                            upgradeLevels[currentSelection]++;
+                        }
+                        previousUpgrades.Insert(0, currentSelection);
                     }
                     else
                     {
-                        upgradeLevels[currentSelection]++;
+                        // Buzzer sound
                     }
-                    previousUpgrades.Insert(0, currentSelection);
                 }
                 else
                 {

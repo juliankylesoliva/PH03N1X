@@ -11,8 +11,10 @@ public class SwarmDirector : MonoBehaviour
 
     [SerializeField] SwarmDirections[] roundList;
 
-    private int currentRound = 0;
+    private int currentRound = -1;
     private SwarmDirections dirs = null;
+
+    private bool isBetweenWaves = false;
 
     private bool isSpawningEnemies = false;
 
@@ -33,23 +35,30 @@ public class SwarmDirector : MonoBehaviour
 
     void Start()
     {
-        InitializeSwarm(roundList[currentRound]);
+        
     }
 
     void Update()
     {
         // TODO: If there are no enemies left, check if there was no miss, then reset and load the next wave
+        if (!isBetweenWaves && !isSpawningEnemies && !AreEnemiesAlive() && !AreEnemiesActive() && PlayerSpawner.GetPlayerRef() != null)
+        {
+            StartCoroutine(BetweenWaves());
+        }
 
-        if (!isSpawningEnemies && PlayerSpawner.GetPlayerRef() != null && PlayerSpawner.GetPlayerRef().GetIsPlayerReady()) { TryEnemyAttack(); }
+        if (!isBetweenWaves && !isSpawningEnemies && PlayerSpawner.GetPlayerRef() != null && PlayerSpawner.GetPlayerRef().GetIsPlayerReady()) { TryEnemyAttack(); }
 
-        currentRadius = ((dirs.radiusAmplitude * Mathf.Sin(currentRadiusTheta)) + dirs.startingRadius) * Mathf.Lerp(1, dirs.retreatRadius, currentRadiusScaleLerp);
-        currentRotationSpeed = (dirs.rotationSpeedDegreesAmplitude * Mathf.Sin(currentRotationSpeedTheta) * Mathf.Deg2Rad);
-        currentRotationOffset += (currentRotationSpeed * Time.deltaTime);
+        if (dirs != null)
+        {
+            currentRadius = ((dirs.radiusAmplitude * Mathf.Sin(currentRadiusTheta)) + dirs.startingRadius) * Mathf.Lerp(1, dirs.retreatRadius, currentRadiusScaleLerp);
+            currentRotationSpeed = (dirs.rotationSpeedDegreesAmplitude * Mathf.Sin(currentRotationSpeedTheta) * Mathf.Deg2Rad);
+            currentRotationOffset += (currentRotationSpeed * Time.deltaTime);
 
-        UpdatePositionVectors();
+            UpdatePositionVectors();
 
-        currentRadiusTheta += (dirs.radiusChangeSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
-        currentRotationSpeedTheta += (dirs.rotationSpeedSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
+            currentRadiusTheta += (dirs.radiusChangeSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
+            currentRotationSpeedTheta += (dirs.rotationSpeedSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
+        }
     }
 
     public Vector3 GetPositionByID(int id)
@@ -83,6 +92,37 @@ public class SwarmDirector : MonoBehaviour
 
         GameObject testProj = GameObject.FindWithTag("EnemyProjectile");
         return (testProj != null);
+    }
+
+    private IEnumerator BetweenWaves()
+    {
+        if (isBetweenWaves || isSpawningEnemies) { yield break; }
+        isBetweenWaves = true;
+
+        yield return new WaitForSeconds(1f);
+
+        if (currentRound >= 0)
+        {
+            if (Scorekeeper.GetIsNoMiss())
+            {
+                Scorekeeper.AddNoMiss();
+            }
+        }
+
+        Scorekeeper.ResetIsNoMiss();
+
+        yield return new WaitForSeconds(2f);
+
+        currentRound++;
+        InitializeSwarm(roundList[(currentRound < roundList.Length ? currentRound : (roundList.Length - 1))]);
+
+        isBetweenWaves = false;
+        yield return null;
+    }
+
+    private bool AreEnemiesAlive()
+    {
+        return (enemyRefs != null && enemyRefs.Values.Count > 0);
     }
 
     private void InitializeSwarm(SwarmDirections d)
@@ -119,7 +159,7 @@ public class SwarmDirector : MonoBehaviour
         {
             for (int i = 0; i < (dirs.maxGroupSizePerAttack > 1 ? Random.Range(1, dirs.maxGroupSizePerAttack + 1) : 1); ++i)
             {
-                if (enemyRefs.Keys.Count == 0) { return; }
+                if (enemyRefs == null || enemyRefs.Keys.Count == 0) { return; }
                 int[] tempIDs = new int[enemyRefs.Keys.Count];
                 enemyRefs.Keys.CopyTo(tempIDs, 0);
 

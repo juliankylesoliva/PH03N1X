@@ -36,6 +36,7 @@ public class Scorekeeper : MonoBehaviour
 
     void Awake()
     {
+        _noMissBonus = noMissBonus;
         _grazePointValue = grazePointValue;
         _streakToIncreaseMultiplier = streakToIncreaseMultiplier;
     }
@@ -89,7 +90,7 @@ public class Scorekeeper : MonoBehaviour
         }
     }
 
-    public static void NewWaveNewNoMiss()
+    public static void ResetIsNoMiss()
     {
         isNoMiss = true;
     }
@@ -104,6 +105,11 @@ public class Scorekeeper : MonoBehaviour
     public static void DisqualifyNoMiss()
     {
         isNoMiss = false;
+    }
+
+    public static bool GetIsNoMiss()
+    {
+        return isNoMiss;
     }
 
     public static void ResetHighScoreDisplay()

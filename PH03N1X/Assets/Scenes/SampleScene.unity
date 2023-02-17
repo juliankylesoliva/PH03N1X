@@ -1970,20 +1970,8 @@ MonoBehaviour:
   positionDegreeOffset: -90
   reversePositionDirection: 1
   centerPoint: {x: 0, y: 0, z: 0}
-  seed: 0
-  startingRadius: 7
-  radiusAmplitude: 0.5
-  radiusChangeSineDegrees: 90
-  retreatRadius: 3
-  retreatTime: 5
-  rotationSpeedDegreesAmplitude: 30
-  rotationSpeedSineDegrees: 40
-  enemyGroupsToSpawn: 4
-  setupTime: 2
-  maxGroupSizePerAttack: 1
-  minAttackInterval: 3
-  maxAttackInterval: 6
-  attackIntervalChange: 0.25
+  roundList:
+  - {fileID: 11400000, guid: 857988f25b212d24194dcba0119a7612, type: 2}
 --- !u!1 &1086654541
 GameObject:
   m_ObjectHideFlags: 0
