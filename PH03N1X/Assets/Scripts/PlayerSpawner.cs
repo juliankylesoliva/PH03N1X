@@ -5,11 +5,11 @@ using UnityEngine;
 public class PlayerSpawner : MonoBehaviour
 {
     [SerializeField] GameObject playerPrefab;
+    [SerializeField, Range(1, 5)] int startingLives = 3;
     [SerializeField] int maxUpgradeLevel = 3;
+    [SerializeField] int baseUpgradeCost = 100;
+    [SerializeField] float upgradeCostGrowthRate = 1.5f;
     [SerializeField] int[] upgradeLevels = new int[6];
-
-    private GameObject playerRef = null;
-    private static ShipControl _playerRef = null;
 
     [Header("Upgrade Tables")]
     [SerializeField] int[] maxBulletsUpgradeTable;
@@ -17,22 +17,40 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] float[] moveSpeedUpgradeTable;
     [SerializeField] float[] turnSpeedUpgradeTable;
     [SerializeField] float[] ScoreToAshRateUpgradeTable;
-    [SerializeField] float[] MaxComboMultiplierUpgradeTable;
+    [SerializeField] int[] MaxComboMultiplierUpgradeTable;
+
+    private GameObject playerRef = null;
+    private static ShipControl _playerRef = null;
+
+    private bool isGameOver = false;
+    private bool isUpgrading = false;
+    private int livesLeft = 0;
+    private int currentAshes = 0;
 
     void Start()
     {
+        livesLeft = startingLives;
         CheckInitialUpgradeLevels();
         SpawnPlayer();
     }
 
+    void Update()
+    {
+        if (!isGameOver && playerRef == null && !isUpgrading)
+        {
+            StartCoroutine(UpgradePhase());
+        }
+    }
+
     public void SpawnPlayer()
     {
-        if (playerRef == null)
+        if (livesLeft > 0 && playerRef == null)
         {
             playerRef = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
             ShipControl tempShip = playerRef.GetComponent<ShipControl>();
             _playerRef = tempShip;
             tempShip.SetShipParameters(maxBulletsUpgradeTable[upgradeLevels[0]], fireRateUpgradeTable[upgradeLevels[1]], moveSpeedUpgradeTable[upgradeLevels[2]], turnSpeedUpgradeTable[upgradeLevels[4]]);
+            Scorekeeper.SetMaxMultiplier(MaxComboMultiplierUpgradeTable[upgradeLevels[5]]);
         }
     }
 
@@ -67,5 +85,46 @@ public class PlayerSpawner : MonoBehaviour
             sum += i;
         }
         return sum;
+    }
+
+    private IEnumerator UpgradePhase() // TODO
+    {
+        isUpgrading = true;
+
+        // Wait for enemies and projectiles to stop moving
+        // Darken the screen a bit
+        // Show this life's score and the grand total score
+
+        yield return new WaitForSeconds(2f);
+
+        // If there are lives remaining
+        if (livesLeft > 0)
+        {
+            // Decrease lives left by one
+            --livesLeft;
+
+            // convert this life's score to ashes while showing the grand score
+            currentAshes += GetAshesFromLifeScore();
+
+            // Show list of upgrades, wait for player to finish
+            // Respawn player
+            SpawnPlayer();
+        }
+        else
+        {
+            // If not, game over
+            isGameOver = true;
+        }
+
+        isUpgrading = false;
+        yield return null;
+    }
+
+    private int GetAshesFromLifeScore()
+    {
+        int result = (int)(Scorekeeper.GetThisLifeScore() * ScoreToAshRateUpgradeTable[upgradeLevels[4]]);
+        result -= (result % 5);
+        Scorekeeper.ResetThisLifeScore();
+        return result;
     }
 }

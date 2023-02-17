@@ -10,6 +10,9 @@ public class Scorekeeper : MonoBehaviour
     [SerializeField] TMP_Text highScoreDisplayNumber;
     [SerializeField] TMP_Text comboMeter;
 
+    [SerializeField] int noMissBonus = 5000;
+    private static int _noMissBonus = 0;
+
     [SerializeField] int grazePointValue = 5;
     private static int _grazePointValue = 0;
 
@@ -19,6 +22,7 @@ public class Scorekeeper : MonoBehaviour
     private static int currentCombo = 0;
     private static int currentMuliplier = 1;
     private static int maxMultiplier = 2;
+    private static bool isNoMiss = true;
 
     private static int thisLifeScore = 0;
     private static int grandTotalScore = 0;
@@ -40,22 +44,26 @@ public class Scorekeeper : MonoBehaviour
 
     void Update()
     {
-        p1ScoreNumber.text = thisLifeScore.ToString("D7");
+        p1ScoreNumber.text = thisLifeScore.ToString("D7"); // TODO: Add option to toggle between score this life and grand score
         highScoreDisplayNumber.text = highScoreDisplay.ToString("D7");
-        comboMeter.text = $"{new string('|', currentCombo)} x{currentMuliplier}";
+        comboMeter.text = $"{new string('|', currentCombo)}x{currentMuliplier}";
     }
 
     public static int AddGraze()
     {
-        thisLifeScore += _grazePointValue;
-        CheckHighScoreDisplay();
-        return _grazePointValue;
+        return AddToScore(_grazePointValue);
+    }
+
+    public static int AddNoMiss()
+    {
+        return AddToScore(_noMissBonus);
     }
 
     public static int AddToScore(int points, bool useMultiplier = false)
     {
         int totalPoints = (points * (useMultiplier ? currentMuliplier : 1));
         thisLifeScore += totalPoints;
+        grandTotalScore += totalPoints;
         CheckHighScoreDisplay();
         return totalPoints;
     }
@@ -70,15 +78,26 @@ public class Scorekeeper : MonoBehaviour
             if (currentMuliplier < maxMultiplier)
             {
                 currentMuliplier++;
-                currentCombo = 0;
+                if (currentMuliplier < maxMultiplier) { currentCombo = 0; }
             }
         }
+    }
+
+    public static void NewWaveNewNoMiss()
+    {
+        isNoMiss = true;
     }
 
     public static void BreakCombo()
     {
         currentCombo = 0;
         currentMuliplier = 1;
+        isNoMiss = false;
+    }
+
+    public static void DisqualifyNoMiss()
+    {
+        isNoMiss = false;
     }
 
     public static void ResetHighScoreDisplay()
@@ -101,6 +120,11 @@ public class Scorekeeper : MonoBehaviour
     public static void SetMaxMultiplier(int m)
     {
         maxMultiplier = m;
+    }
+
+    public static void ResetThisLifeScore()
+    {
+        thisLifeScore = 0;
     }
 
     public static int GetThisLifeScore()

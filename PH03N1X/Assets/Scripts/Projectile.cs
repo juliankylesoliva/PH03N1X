@@ -23,7 +23,7 @@ public class Projectile : MonoBehaviour
         }
         else
         {
-            Scorekeeper.BreakCombo();
+            if (this.gameObject.tag == "PlayerProjectile") { Scorekeeper.BreakCombo(); }
             GameObject.Destroy(this.gameObject);
         }
     }

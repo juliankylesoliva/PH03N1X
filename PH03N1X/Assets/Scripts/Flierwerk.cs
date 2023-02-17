@@ -56,6 +56,11 @@ public class Flierwerk : MonoBehaviour
         positionID = id;
     }
 
+    public int GetPositionID()
+    {
+        return positionID;
+    }
+
     public bool GetIsAttacking()
     {
         return isAttacking;
@@ -81,6 +86,7 @@ public class Flierwerk : MonoBehaviour
             if (ctrl != null) { playerPosition = (ctrl.transform.position + (ctrl.transform.up * playerPositionOffset.y) + (ctrl.transform.right * playerPositionOffset.x)); }
             targetDirection = (playerPosition - this.transform.position);
             this.transform.up = targetDirection.normalized;
+            this.transform.position = director.GetPositionByID(positionID);
 
             CheckColorChange();
 
@@ -104,16 +110,20 @@ public class Flierwerk : MonoBehaviour
         }
 
         FireShrapnel();
+        Scorekeeper.DisqualifyNoMiss();
         GameObject.Destroy(this.gameObject);
-
         yield break;
     }
 
     public void KillEnemy()
     {
-        if (isAttacking) { StopCoroutine("AttackCR"); }
-        GameObject.Destroy(this.gameObject);
+        if (isAttacking)
+        {
+            StopCoroutine("AttackCR");
+            FireShrapnel();
+        }
         Scorekeeper.AddToScore(pointValue * (isAttacking ? 2 : 1), true);
+        GameObject.Destroy(this.gameObject);
     }
 
     private void FireShrapnel()

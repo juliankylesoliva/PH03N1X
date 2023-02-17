@@ -371,15 +371,15 @@ Camera:
   m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.24929178
+    x: 0
     y: 0
-    width: 0.50141644
+    width: 1
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 8
+  orthographic size: 8.25
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -391,7 +391,7 @@ Camera:
   m_HDR: 1
   m_AllowMSAA: 0
   m_AllowDynamicResolution: 0
-  m_ForceIntoRT: 1
+  m_ForceIntoRT: 0
   m_OcclusionCulling: 0
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
@@ -424,7 +424,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_AssetsPPU: 16
   m_RefResolutionX: 256
-  m_RefResolutionY: 256
+  m_RefResolutionY: 320
   m_UpscaleRT: 0
   m_PixelSnapping: 1
   m_CropFrameX: 1
@@ -614,14 +614,19 @@ MonoBehaviour:
   - {fileID: 7410399946126951996, guid: b227d0868ea6bc34ea783931385edfa9, type: 3}
   - {fileID: 2184868313436593550, guid: 8097e985466748d48bb81d6944607da6, type: 3}
   - {fileID: 4306787691169915266, guid: 6ed62145738fbb447b6745a8a82e5fb6, type: 3}
+  positionDegreeOffset: -90
+  reversePositionDirection: 1
   centerPoint: {x: 0, y: 0, z: 0}
   seed: 0
-  startingRadius: 7.2
-  radiusAmplitude: 0.6
+  startingRadius: 7
+  radiusAmplitude: 0.5
   radiusChangeSineDegrees: 90
+  retreatRadius: 3
+  retreatTime: 5
   rotationSpeedDegreesAmplitude: 30
   rotationSpeedSineDegrees: 40
   enemyGroupsToSpawn: 4
+  setupTime: 2
   minAttackInterval: 3
   maxAttackInterval: 6
   attackIntervalChange: 0.25
@@ -805,7 +810,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerPrefab: {fileID: 6353085652997550526, guid: e23f7a35ce03bca48b67ce2bcc5c66b1, type: 3}
+  startingLives: 3
   maxUpgradeLevel: 3
+  baseUpgradeCost: 100
+  upgradeCostGrowthRate: 1.5
   upgradeLevels: 000000000000000000000000000000000000000000000000
   maxBulletsUpgradeTable: 01000000020000000300000004000000
   fireRateUpgradeTable:
@@ -828,11 +836,7 @@ MonoBehaviour:
   - 0.5
   - 0.75
   - 1
-  MaxComboMultiplierUpgradeTable:
-  - 2
-  - 3
-  - 4
-  - 5
+  MaxComboMultiplierUpgradeTable: 02000000030000000400000005000000
 --- !u!1 &1729303380
 GameObject:
   m_ObjectHideFlags: 0
@@ -884,7 +888,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 16
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 256, y: 256}
+  m_ReferenceResolution: {x: 256, y: 320}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
@@ -1437,5 +1441,6 @@ MonoBehaviour:
   p1ScoreNumber: {fileID: 1899008144}
   highScoreDisplayNumber: {fileID: 524986909}
   comboMeter: {fileID: 2032941737}
+  noMissBonus: 5000
   grazePointValue: 5
   streakToIncreaseMultiplier: 5
