@@ -160,6 +160,7 @@ public class Flierwerk : MonoBehaviour
             ShipControl tempShip = other.gameObject.GetComponent<ShipControl>();
             if (tempShip != null) { tempShip.KillShip(); }
             if (isAttacking) { StopCoroutine("AttackCR"); }
+            FireShrapnel();
             GameObject.Destroy(this.gameObject);
         }
     }

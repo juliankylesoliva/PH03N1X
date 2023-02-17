@@ -100,6 +100,25 @@ public class SwarmDirector : MonoBehaviour
         }
     }
 
+    public static bool AreEnemiesActive()
+    {
+        GameObject[] tempRefs = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject g in tempRefs)
+        {
+            if (g != null)
+            {
+                Flierwerk tempEnemy = g.GetComponent<Flierwerk>();
+                if (tempEnemy != null && tempEnemy.GetIsAttacking())
+                {
+                    return true;
+                }
+            }
+        }
+
+        GameObject testProj = GameObject.FindWithTag("EnemyProjectile");
+        return (testProj != null);
+    }
+
     private void TryEnemyAttack()
     {
         if (currentAttackTimer > 0f)

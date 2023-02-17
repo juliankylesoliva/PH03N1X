@@ -10,6 +10,9 @@ public class Scorekeeper : MonoBehaviour
     [SerializeField] TMP_Text highScoreDisplayNumber;
     [SerializeField] TMP_Text comboMeter;
 
+    [SerializeField] TMP_Text grandTotalScoreNumber;
+    [SerializeField] TMP_Text thisLifeScoreNumber;
+
     [SerializeField] int noMissBonus = 5000;
     private static int _noMissBonus = 0;
 
@@ -47,6 +50,9 @@ public class Scorekeeper : MonoBehaviour
         p1ScoreNumber.text = thisLifeScore.ToString("D7"); // TODO: Add option to toggle between score this life and grand score
         highScoreDisplayNumber.text = highScoreDisplay.ToString("D7");
         comboMeter.text = $"{new string('|', currentCombo)}x{currentMuliplier}";
+
+        grandTotalScoreNumber.text = grandTotalScore.ToString("D7");
+        thisLifeScoreNumber.text = thisLifeScore.ToString("D7");
     }
 
     public static int AddGraze()
@@ -120,6 +126,12 @@ public class Scorekeeper : MonoBehaviour
     public static void SetMaxMultiplier(int m)
     {
         maxMultiplier = m;
+    }
+
+    public static void DecrementThisLifeScore(int n)
+    {
+        thisLifeScore -= n;
+        if (thisLifeScore < 0) { thisLifeScore = 0; }
     }
 
     public static void ResetThisLifeScore()
