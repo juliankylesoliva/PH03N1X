@@ -6,6 +6,9 @@ using TMPro;
 
 public class SwarmDirector : MonoBehaviour
 {
+    [SerializeField] StarScroll[] starBG;
+    [SerializeField] Boundary boundaryBG;
+
     [SerializeField] TMP_Text waveTextCenter;
     [SerializeField] TMP_Text waveTextCorner;
 
@@ -46,7 +49,7 @@ public class SwarmDirector : MonoBehaviour
 
     void Start()
     {
-        
+        ScrollStars(6.5f, 100f);
     }
 
     void Update()
@@ -76,6 +79,7 @@ public class SwarmDirector : MonoBehaviour
         {
             if (enemyRefs != null && enemyRefs.Values.Count > 0 && positionVectors != null && currentRadiusScaleLerp < 1f)
             {
+                if (currentRadiusScaleLerp == 0f) { StartCoroutine(boundaryBG.FadeOutCR(0.5f)); }
                 currentRadiusScaleLerp += (Time.deltaTime / dirs.retreatTime);
                 currentRadius = ((dirs.radiusAmplitude * Mathf.Sin(currentRadiusTheta)) + dirs.startingRadius) * Mathf.Lerp(1, dirs.retreatRadius, currentRadiusScaleLerp);
                 UpdatePositionVectors();
@@ -91,6 +95,7 @@ public class SwarmDirector : MonoBehaviour
                     currentRadiusScaleLerp = 0f;
                     waveTextCorner.gameObject.SetActive(false);
                     currentRound = -1;
+                    ScrollStars(6.5f, 100f);
                 }
             }
         }
@@ -165,7 +170,8 @@ public class SwarmDirector : MonoBehaviour
     {
         if (isBetweenWaves || isSpawningEnemies) { yield break; }
         isBetweenWaves = true;
-
+        if (currentRound >= 0) { yield return StartCoroutine(boundaryBG.FizzleOutCR(1f)); }
+        ScrollStars(6.5f, 1f);
         yield return new WaitForSeconds(1f);
 
         if (currentRound >= 0)
@@ -207,7 +213,8 @@ public class SwarmDirector : MonoBehaviour
         waveTextCorner.gameObject.SetActive(true);
 
         waveTextCenter.gameObject.SetActive(true);
-        yield return new WaitForSeconds(2f);
+        ScrollStars(0f, 3f);
+        if (currentRound >= 0) { yield return StartCoroutine(boundaryBG.FadeInCR(2f)); }
         waveTextCenter.gameObject.SetActive(false);
 
         InitializeSwarm(roundList[(currentRound < roundList.Length ? currentRound : (roundList.Length - 1))]);
@@ -324,5 +331,13 @@ public class SwarmDirector : MonoBehaviour
 
         isSpawningEnemies = false;
         yield break;
+    }
+
+    private void ScrollStars(float speed, float rate)
+    {
+        foreach (StarScroll s in starBG)
+        {
+            s.SetScrollSpeed(speed, rate);
+        }
     }
 }
