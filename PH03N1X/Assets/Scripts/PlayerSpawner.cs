@@ -6,6 +6,8 @@ using TMPro;
 
 public class PlayerSpawner : MonoBehaviour
 {
+    AudioSource src;
+
     [Header("Drag and Drop")]
     [SerializeField] GameObject playerPrefab;
     [SerializeField] GameObject readyText;
@@ -65,6 +67,11 @@ public class PlayerSpawner : MonoBehaviour
     private int livesBought = 0;
 
     private TMP_Text[] upgradeTextRefs;
+
+    void Awake()
+    {
+        src = this.gameObject.GetComponent<AudioSource>();
+    }
 
     void Start()
     {
@@ -175,10 +182,12 @@ public class PlayerSpawner : MonoBehaviour
 
         int ashesToTransfer = GetAshesFromLifeScore();
 
+        src.clip = SoundLibrary.GetClip("score_blip");
         int interval = (Scorekeeper.GetThisLifeScore() < 10 ? 1 : (int)Mathf.Pow(10f, Mathf.Log(Scorekeeper.GetThisLifeScore() / 10f, 10f)));
         while (Scorekeeper.GetThisLifeScore() > 0)
         {
             Scorekeeper.DecrementThisLifeScore(interval);
+            src.Play();
             yield return null;
         }
         yield return new WaitForSeconds(0.5f);
@@ -186,6 +195,7 @@ public class PlayerSpawner : MonoBehaviour
         while (currentAshes < targetAshes)
         {
             currentAshes += interval;
+            src.Play();
             if (currentAshes > targetAshes) { currentAshes = targetAshes; }
             totalAshesNumber.text = currentAshes.ToString("D7");
             yield return null;

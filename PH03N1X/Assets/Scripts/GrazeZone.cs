@@ -5,12 +5,14 @@ using UnityEngine;
 public class GrazeZone : MonoBehaviour
 {
     SpriteRenderer spriteRenderer;
+    AudioSource src;
 
     private int numInZone = 0;
 
     void Awake()
     {
         spriteRenderer = this.gameObject.GetComponent<SpriteRenderer>();
+        src = this.gameObject.GetComponent<AudioSource>();
     }
 
     void Update()
@@ -22,6 +24,7 @@ public class GrazeZone : MonoBehaviour
     {
         if (other.gameObject.tag == "EnemyProjectile")
         {
+            src.Play();
             numInZone++;
         }
     }

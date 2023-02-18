@@ -4,8 +4,11 @@ using UnityEngine;
 
 public class Flierwerk : MonoBehaviour
 {
-    private SpriteRenderer spriteRenderer;
+    SpriteRenderer spriteRenderer;
+    AudioSource src;
 
+    [SerializeField] string attackSoundName = "enemy_attack_color";
+    [SerializeField] string explodeSoundName = "explode_enemy_color";
     [SerializeField] GameObject reticlePrefab;
     [SerializeField] GameObject directionArrowPrefab;
     [SerializeField] GameObject shrapnelPrefab;
@@ -34,6 +37,7 @@ public class Flierwerk : MonoBehaviour
     void Awake()
     {
         spriteRenderer = this.gameObject.GetComponent<SpriteRenderer>();
+        src = this.gameObject.GetComponent<AudioSource>();
     }
 
     void Start()
@@ -109,6 +113,8 @@ public class Flierwerk : MonoBehaviour
         }
         UpdateReticle(0f);
 
+        src.clip = SoundLibrary.GetClip(attackSoundName);
+        src.Play();
         float currentAttackTimer = ((targetDirection.magnitude / attackSpeed) * distancePortion);
         while (currentAttackTimer > 0f)
         {
@@ -141,6 +147,7 @@ public class Flierwerk : MonoBehaviour
             StopCoroutine("AttackCR");
             FireShrapnel();
         }
+        if (!isAttacking) { SoundLibrary.Play("hit_enemy", src.volume); }
         Scorekeeper.AddToScore(pointValue * (isAttacking ? 2 : 1), true);
         if (reticleRef != null) { GameObject.Destroy(reticleRef); }
         if (directionArrowRef != null) { GameObject.Destroy(directionArrowRef); }
@@ -149,6 +156,7 @@ public class Flierwerk : MonoBehaviour
 
     private void FireShrapnel()
     {
+        SoundLibrary.Play(explodeSoundName, src.volume);
         int increment = (arcOfShotSpread / numberOfShrapnel);
         for (int i = 0; i < arcOfShotSpread; i += increment)
         {

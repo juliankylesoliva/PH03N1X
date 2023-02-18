@@ -71,10 +71,7 @@ public class ShipControl : MonoBehaviour
 
     public void KillShip()
     {
-        Scorekeeper.BreakCombo();
-        Scorekeeper.IncrementLivesLost();
-        GameObject.Destroy(reticleRef.gameObject);
-        GameObject.Destroy(this.gameObject);
+        StartCoroutine(KillShipCR());
     }
 
     /* HELPER FUNCTIONS */
@@ -213,5 +210,20 @@ public class ShipControl : MonoBehaviour
             fireRateTimer -= Time.deltaTime;
             if (fireRateTimer < 0f) { fireRateTimer = 0f; }
         }
+    }
+
+    private IEnumerator KillShipCR()
+    {
+        Scorekeeper.BreakCombo();
+        Scorekeeper.IncrementLivesLost();
+
+        SoundLibrary.Play("explode_hitstop", 0.9f);
+        Time.timeScale = 0f;
+        yield return new WaitForSecondsRealtime(1f);
+        Time.timeScale = 1f;
+        SoundLibrary.Play("explode_player", 0.9f);
+
+        GameObject.Destroy(reticleRef.gameObject);
+        GameObject.Destroy(this.gameObject);
     }
 }

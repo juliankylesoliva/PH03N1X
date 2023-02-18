@@ -6,6 +6,8 @@ using TMPro;
 
 public class SwarmDirector : MonoBehaviour
 {
+    AudioSource src;
+
     [SerializeField] StarScroll[] starBG;
     [SerializeField] Boundary boundaryBG;
 
@@ -47,6 +49,11 @@ public class SwarmDirector : MonoBehaviour
 
     private Vector2[] positionVectors = null;
 
+    void Awake()
+    {
+        src = this.gameObject.GetComponent<AudioSource>();
+    }
+
     void Start()
     {
         ScrollStars(6.5f, 100f);
@@ -61,7 +68,7 @@ public class SwarmDirector : MonoBehaviour
                 StartCoroutine(BetweenWaves());
             }
 
-            if (!isBetweenWaves && !isSpawningEnemies && PlayerSpawner.GetPlayerRef() != null && PlayerSpawner.GetPlayerRef().GetIsPlayerReady()) { TryEnemyAttack(); }
+            if (AreEnemiesAlive() && !isBetweenWaves && !isSpawningEnemies && PlayerSpawner.GetPlayerRef() != null && PlayerSpawner.GetPlayerRef().GetIsPlayerReady()) { TryEnemyAttack(); }
 
             if (dirs != null && positionVectors != null)
             {
@@ -258,6 +265,11 @@ public class SwarmDirector : MonoBehaviour
             if (AreEnemiesAttacking()) { return; }
 
             int numEnemiesToChoose = (dirs.maxGroupSizePerAttack > 1 ? Random.Range(1, dirs.maxGroupSizePerAttack + 1) : 1);
+
+            src.clip = SoundLibrary.GetClip("alert_4");
+            src.volume = 0.8f;
+            if (src.clip != null) { src.Play(); }
+
             for (int i = 0; i < numEnemiesToChoose; ++i)
             {
                 if (enemyRefs == null || enemyRefs.Keys.Count == 0) { return; }
