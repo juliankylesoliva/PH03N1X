@@ -10,6 +10,7 @@ public class ShipControl : MonoBehaviour
     /* EDITOR PARAMETERS */
     [SerializeField] GameObject playerBulletPrefab;
     [SerializeField] Transform bulletSpawnLocation;
+    [SerializeField] GameObject reticlePrefab;
 
     [SerializeField] float readyPlayerDuration = 3f;
     [SerializeField] Vector2 startCenter;
@@ -28,10 +29,13 @@ public class ShipControl : MonoBehaviour
     private Vector2 moveDirection = Vector2.zero;
     private GameObject[] bulletRefs = null;
     private float fireRateTimer = 0f;
+    private SpriteRenderer reticleRef;
 
     void Awake()
     {
         playerCam = Camera.main;
+        GameObject tempObj = Instantiate(reticlePrefab, Vector3.zero, Quaternion.identity);
+        if (tempObj != null) { reticleRef = tempObj.GetComponent<SpriteRenderer>(); }
     }
 
     void Start()
@@ -46,6 +50,7 @@ public class ShipControl : MonoBehaviour
         SetAimDirection();
         SetMovementDirection();
         TickFireRateTimer();
+        DisplayReticle();
         FireProjectile();
         GoToNextPosition();
     }
@@ -68,6 +73,7 @@ public class ShipControl : MonoBehaviour
     {
         Scorekeeper.BreakCombo();
         Scorekeeper.IncrementLivesLost();
+        GameObject.Destroy(reticleRef.gameObject);
         GameObject.Destroy(this.gameObject);
     }
 
@@ -91,6 +97,24 @@ public class ShipControl : MonoBehaviour
             bulletRefs[FindEmptyBulletSlot()] = Instantiate(playerBulletPrefab, bulletSpawnLocation.position, this.transform.rotation);
             SetFireRateTimer();
         }
+    }
+
+    private void DisplayReticle()
+    {
+        if (reticleRef != null && CanFireAShot())
+        {
+            reticleRef.color = Color.white;
+            Vector3 mouseLocation = playerCam.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 direction = (mouseLocation - this.transform.position);
+            direction.z = 0f;
+            float radius = direction.magnitude;
+            reticleRef.transform.position = (this.transform.position + (this.transform.up * radius));
+        }
+        else if (reticleRef != null)
+        {
+            reticleRef.color = Color.clear;
+        }
+        else { /* Nothing */ }
     }
 
     private void SetMovementDirection()

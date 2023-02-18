@@ -44,6 +44,12 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: BackgroundSprites
+    uniqueID: 133852347
+    locked: 0
+  - name: PlayerSprites
+    uniqueID: 788240597
+    locked: 0
   - name: EnemySprites
     uniqueID: 3550447481
     locked: 0
