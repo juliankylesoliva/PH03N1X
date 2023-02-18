@@ -108,8 +108,11 @@ public class PlayerSpawner : MonoBehaviour
         isGameOver = false;
         _isGameOver = false;
         livesLeft = startingLives;
+        currentAshes = 0;
+        livesBought = 0;
         UpdateLivesDisplay();
-        CheckInitialUpgradeLevels();
+        ResetUpgradeLevels();
+        Scorekeeper.ResetScorekeeper();
         SpawnPlayer();
     }
 
@@ -128,13 +131,11 @@ public class PlayerSpawner : MonoBehaviour
         }
     }
 
-    private void CheckInitialUpgradeLevels()
+    private void ResetUpgradeLevels()
     {
         for (int i = 0; i < upgradeLevels.Length; ++i)
         {
-            if (upgradeLevels[i] < 0) { upgradeLevels[i] = 0; }
-            else if (upgradeLevels[i] > maxUpgradeLevel) { upgradeLevels[i] = maxUpgradeLevel; }
-            else { /* Nothing */ }
+            upgradeLevels[i] = 0;
         }
     }
 
@@ -191,7 +192,8 @@ public class PlayerSpawner : MonoBehaviour
         }
         yield return new WaitForSeconds(0.5f);
 
-        livesRemainingText.text = $"YOU HAVE {livesLeft} LI{(livesLeft > 1 || livesLeft == 0 ? "VES" : "FE")} REMAINING";
+        bool savingGrace = (livesLeft == 0 && currentAshes >= GetExtraLifeCost());
+        livesRemainingText.text = (savingGrace ? "YOU CAN GET AN EXTRA LIFE!" : $"YOU HAVE {livesLeft} LI{(livesLeft > 1 || livesLeft == 0 ? "VES" : "FE")} REMAINING");
         livesRemainingText.gameObject.SetActive(true);
 
         yield return new WaitForSeconds(2f);
@@ -201,109 +203,112 @@ public class PlayerSpawner : MonoBehaviour
         totalAshesText.SetActive(false);
         livesRemainingText.gameObject.SetActive(false);
 
-        // Show list of upgrades, wait for player to finish
-        upgradeScreen.SetActive(true);
-        int currentSelection = 0;
-        bool isPlayerFinished = false;
-        float previousYAxis = 0f;
-        List<int> previousUpgrades = new List<int>();
-        while (!isPlayerFinished)
+        if (livesLeft > 0 || savingGrace)
         {
-            ashesUpgradeDisplayText.text = $"ASHES LEFT: {currentAshes.ToString("D7")}";
-
-            maxBulletUpgradeText.text   = $"MAX BULLET UP [LV. {upgradeLevels[0]}]:  {(upgradeLevels[0] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[0]) : "MAX")}";
-            fireRateUpgradeText.text    = $"FIRE RATE UP  [LV. {upgradeLevels[1]}]:  {(upgradeLevels[1] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[1]) : "MAX")}";
-            moveSpeedUpgradeText.text   = $"MOVE SPEED UP [LV. {upgradeLevels[2]}]:  {(upgradeLevels[2] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[2]) : "MAX")}";
-            turnSpeedUpgradeText.text   = $"TURN SPEED UP [LV. {upgradeLevels[3]}]:  {(upgradeLevels[3] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[3]) : "MAX")}";
-            ashRateUpgradeText.text     = $"ASH RATE UP   [LV. {upgradeLevels[4]}]:  {(upgradeLevels[4] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[4]) : "MAX")}";
-            maxComboUpgradeText.text    = $"MAX COMBO UP  [LV. {upgradeLevels[5]}]:  {(upgradeLevels[5] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[5]) : "MAX")}";
-            extraLifeText.text          = $"EXTRA LIFE    [{livesLeft} LEFT]: {GetExtraLifeCost()}";
-
-            for (int i = 0; i < upgradeTextRefs.Length; ++i)
+            // Show list of upgrades, wait for player to finish
+            upgradeScreen.SetActive(true);
+            int currentSelection = (savingGrace ? (upgradeTextRefs.Length - 1) : 0);
+            bool isPlayerFinished = false;
+            float previousYAxis = 0f;
+            List<int> previousUpgrades = new List<int>();
+            while (!isPlayerFinished)
             {
-                upgradeTextRefs[i].color = (i == currentSelection ? Color.red : Color.white);
-            }
+                ashesUpgradeDisplayText.text = $"ASHES LEFT: {currentAshes.ToString("D7")}";
 
-            if (Input.GetButtonDown("Submit"))
-            {
-                isPlayerFinished = true;
-                continue;
-            }
-            else if (previousYAxis == 0f && Input.GetAxisRaw("Vertical") != 0f)
-            {
-                if (Input.GetAxisRaw("Vertical") > 0f)
+                maxBulletUpgradeText.text = $"MAX BULLET UP  [LV. {upgradeLevels[0]}]: {(upgradeLevels[0] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[0]) : "MAX")}";
+                fireRateUpgradeText.text = $"FIRE RATE UP   [LV. {upgradeLevels[1]}]: {(upgradeLevels[1] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[1]) : "MAX")}";
+                moveSpeedUpgradeText.text = $"MOVE SPEED UP  [LV. {upgradeLevels[2]}]: {(upgradeLevels[2] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[2]) : "MAX")}";
+                turnSpeedUpgradeText.text = $"TURN SPEED UP  [LV. {upgradeLevels[3]}]: {(upgradeLevels[3] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[3]) : "MAX")}";
+                ashRateUpgradeText.text = $"ASH RATE UP    [LV. {upgradeLevels[4]}]: {(upgradeLevels[4] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[4]) : "MAX")}";
+                maxComboUpgradeText.text = $"MAX COMBO UP   [LV. {upgradeLevels[5]}]: {(upgradeLevels[5] < maxUpgradeLevel ? GetUpgradeCost(upgradeLevels[5]) : "MAX")}";
+                extraLifeText.text = $"EXTRA LIFE     [{livesLeft} / {maxLives}]: {(livesLeft < maxLives ? GetExtraLifeCost() : "MAX")}";
+
+                for (int i = 0; i < upgradeTextRefs.Length; ++i)
                 {
-                    currentSelection--;
-                    if (currentSelection < 0)
-                    {
-                        currentSelection = (upgradeTextRefs.Length - 1);
-                    }
+                    upgradeTextRefs[i].color = (i == currentSelection ? Color.red : Color.white);
                 }
-                else
+
+                if (Input.GetButtonDown("Submit") && livesLeft > 0)
                 {
-                    currentSelection++;
-                    if (currentSelection >= upgradeTextRefs.Length)
-                    {
-                        currentSelection = 0;
-                    }
+                    isPlayerFinished = true;
+                    continue;
                 }
-            }
-            else if (Input.GetButtonDown("Confirm"))
-            {
-                bool isExtraLife = currentSelection >= (upgradeTextRefs.Length - 1);
-                int cost = (!isExtraLife ? GetUpgradeCost(upgradeLevels[currentSelection]) : GetExtraLifeCost());
-                if ((isExtraLife ? livesLeft < maxLives : upgradeLevels[currentSelection] < maxUpgradeLevel) && currentAshes >= cost)
+                else if ((!savingGrace || livesLeft > 0) && previousYAxis == 0f && Input.GetAxisRaw("Vertical") != 0f)
                 {
-                    currentAshes -= cost;
-                    if (isExtraLife)
+                    if (Input.GetAxisRaw("Vertical") > 0f)
                     {
-                        livesLeft++;
-                        livesBought++;
-                        UpdateLivesDisplay();
+                        currentSelection--;
+                        if (currentSelection < 0)
+                        {
+                            currentSelection = (upgradeTextRefs.Length - 1);
+                        }
                     }
                     else
                     {
-                        upgradeLevels[currentSelection]++;
+                        currentSelection++;
+                        if (currentSelection >= upgradeTextRefs.Length)
+                        {
+                            currentSelection = 0;
+                        }
                     }
-                    previousUpgrades.Insert(0, currentSelection);
                 }
-                else
+                else if (Input.GetButtonDown("Confirm"))
                 {
-                    // Buzzer sound
-                }
-            }
-            else if (Input.GetButtonDown("Cancel"))
-            {
-                if (previousUpgrades.Count > 0)
-                {
-                    int selectionToUndo = previousUpgrades[0];
-                    previousUpgrades.RemoveAt(0);
-
-                    if (selectionToUndo >= (upgradeTextRefs.Length - 1))
+                    bool isExtraLife = currentSelection >= (upgradeTextRefs.Length - 1);
+                    int cost = (!isExtraLife ? GetUpgradeCost(upgradeLevels[currentSelection]) : GetExtraLifeCost());
+                    if ((isExtraLife ? livesLeft < maxLives : upgradeLevels[currentSelection] < maxUpgradeLevel) && currentAshes >= cost)
                     {
-                        livesLeft--;
-                        livesBought--;
-                        currentAshes += GetExtraLifeCost();
-                        UpdateLivesDisplay();
+                        currentAshes -= cost;
+                        if (isExtraLife)
+                        {
+                            livesLeft++;
+                            livesBought++;
+                            UpdateLivesDisplay();
+                        }
+                        else
+                        {
+                            upgradeLevels[currentSelection]++;
+                        }
+                        previousUpgrades.Insert(0, currentSelection);
                     }
                     else
                     {
-                        upgradeLevels[selectionToUndo]--;
-                        currentAshes += GetUpgradeCost(upgradeLevels[selectionToUndo]);
+                        // Buzzer sound
                     }
                 }
-                else
+                else if (Input.GetButtonDown("Cancel"))
                 {
-                    // Buzzer sound
-                }
-            }
-            else { /* Nothing */ }
+                    if (previousUpgrades.Count > 0)
+                    {
+                        int selectionToUndo = previousUpgrades[0];
+                        previousUpgrades.RemoveAt(0);
 
-            previousYAxis = Input.GetAxisRaw("Vertical");
-            yield return null;
+                        if (selectionToUndo >= (upgradeTextRefs.Length - 1))
+                        {
+                            livesLeft--;
+                            livesBought--;
+                            currentAshes += GetExtraLifeCost();
+                            UpdateLivesDisplay();
+                            if (savingGrace) { currentSelection = (upgradeTextRefs.Length - 1); }
+                        }
+                        else
+                        {
+                            upgradeLevels[selectionToUndo]--;
+                            currentAshes += GetUpgradeCost(upgradeLevels[selectionToUndo]);
+                        }
+                    }
+                    else
+                    {
+                        // Buzzer sound
+                    }
+                }
+                else { /* Nothing */ }
+
+                previousYAxis = Input.GetAxisRaw("Vertical");
+                yield return null;
+            }
+            upgradeScreen.SetActive(false);
         }
-        upgradeScreen.SetActive(false);
-
 
         // Undarken the screen
         yield return ScreenFade.SetFadeLerp(0f, 1f);

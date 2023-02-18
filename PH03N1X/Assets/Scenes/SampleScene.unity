@@ -970,7 +970,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -0.000030517578, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 10}
   m_Pivot: {x: 1, y: 0}
 --- !u!114 &364815498
@@ -993,7 +993,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: R1
+  m_text: W1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
   m_sharedMaterial: {fileID: -1734770550705829256, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
@@ -1128,7 +1128,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'MAX COMBO UP  [LV. 0]:  99999'
+  m_text: 'MAX COMBO UP   [LV. 0]: 99999'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
   m_sharedMaterial: {fileID: -1734770550705829256, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
@@ -1330,7 +1330,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'FIRE RATE UP  [LV. 0]:  99999'
+  m_text: 'FIRE RATE UP   [LV. 0]: 99999'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
   m_sharedMaterial: {fileID: -1734770550705829256, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
@@ -1588,15 +1588,15 @@ Camera:
   m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.28629032
+    x: 0
     y: 0
-    width: 0.42822582
+    width: 1
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 10
+  orthographic size: 8.25
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1608,7 +1608,7 @@ Camera:
   m_HDR: 1
   m_AllowMSAA: 0
   m_AllowDynamicResolution: 0
-  m_ForceIntoRT: 1
+  m_ForceIntoRT: 0
   m_OcclusionCulling: 0
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
@@ -2110,7 +2110,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'TURN SPEED UP [LV. 0]:  99999'
+  m_text: 'TURN SPEED UP  [LV. 0]: 99999'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
   m_sharedMaterial: {fileID: -1734770550705829256, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
@@ -2695,6 +2695,27 @@ MonoBehaviour:
   centerPoint: {x: 0, y: 0, z: 0}
   roundList:
   - {fileID: 11400000, guid: 857988f25b212d24194dcba0119a7612, type: 2}
+  - {fileID: 11400000, guid: ea92c89df5ba44c4891fb16c26acd3a1, type: 2}
+  - {fileID: 11400000, guid: 1b3cb4b1318da184d9a13e0ad78547fc, type: 2}
+  - {fileID: 11400000, guid: 8a6cfed17a441184ca6e440c7b5283de, type: 2}
+  - {fileID: 11400000, guid: e6726ac319319b94f8def6e7d4b74742, type: 2}
+  - {fileID: 11400000, guid: 9ba28db7b280a044eb1f8e2a9a00021b, type: 2}
+  - {fileID: 11400000, guid: 2ec3eab1e0f79e649939c6baa4dd7a02, type: 2}
+  - {fileID: 11400000, guid: 0919065ece8c1d04aa465125b14a663d, type: 2}
+  - {fileID: 11400000, guid: 9849d273d84c69a40bd10ecdf0943ac6, type: 2}
+  - {fileID: 11400000, guid: c0d4dc10c661d5f4dbeb0fded023e7d5, type: 2}
+  - {fileID: 11400000, guid: 87520d0b34d67dc469e8504b909fb38a, type: 2}
+  - {fileID: 11400000, guid: 00ff2857a32553c479f6eb128c286f6c, type: 2}
+  - {fileID: 11400000, guid: c0a1ba8fee774ce4685e467ec98148d3, type: 2}
+  - {fileID: 11400000, guid: c05eccf7e015bb745b8cee050ff9e1b3, type: 2}
+  - {fileID: 11400000, guid: 30c6a683b7811904686aee48b561f206, type: 2}
+  - {fileID: 11400000, guid: c9ca691a29689e44a92ae0aa079d7dad, type: 2}
+  - {fileID: 11400000, guid: 7ae31c82590b11b47900f63e4451d581, type: 2}
+  - {fileID: 11400000, guid: fdc6a8e26793f0a46b605f6544507acb, type: 2}
+  - {fileID: 11400000, guid: 07e0174996ea63747b4b3ded20aa6ee1, type: 2}
+  - {fileID: 11400000, guid: a84277b9d724ff04db057f1e780ebba3, type: 2}
+  - {fileID: 11400000, guid: 9a419e1490bd17842a8bbb1cd6b48095, type: 2}
+  - {fileID: 11400000, guid: be3f69b3f4af13949812ba2d09854cf8, type: 2}
 --- !u!1 &1086654541
 GameObject:
   m_ObjectHideFlags: 0
@@ -2889,7 +2910,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'MAX BULLET UP [LV. 0]:  99999'
+  m_text: 'MAX BULLET UP  [LV. 0]: 99999'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
   m_sharedMaterial: {fileID: -1734770550705829256, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
@@ -3309,7 +3330,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 1.0000305, y: 1}
+  m_AnchoredPosition: {x: 1, y: 1}
   m_SizeDelta: {x: 152, y: 16}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1383523035
@@ -3394,7 +3415,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'ASH RATE UP   [LV. 0]:  99999'
+  m_text: 'ASH RATE UP    [LV. 0]: 99999'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
   m_sharedMaterial: {fileID: -1734770550705829256, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
@@ -3557,9 +3578,9 @@ MonoBehaviour:
   - 7
   turnSpeedUpgradeTable:
   - 3
-  - 4
   - 5
-  - 6
+  - 8
+  - 12
   ScoreToAshRateUpgradeTable:
   - 0.25
   - 0.5
@@ -4233,7 +4254,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'MOVE SPEED UP [LV. 0]:  99999'
+  m_text: 'MOVE SPEED UP  [LV. 0]: 99999'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
   m_sharedMaterial: {fileID: -1734770550705829256, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
@@ -4871,7 +4892,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'EXTRA LIFE    [X LEFT]: 99999'
+  m_text: 'EXTRA LIFE     [X / Y]: 99999'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 28a112558268af0419f4540e1d490ab9, type: 2}
   m_sharedMaterial: {fileID: -1734770550705829256, guid: 28a112558268af0419f4540e1d490ab9, type: 2}

@@ -211,4 +211,11 @@ public class Scorekeeper : MonoBehaviour
     {
         return recordedHighScore;
     }
+
+    public static void ResetScorekeeper()
+    {
+        BreakCombo();
+        thisLifeScore = 0;
+        grandTotalScore = 0;
+    }
 }

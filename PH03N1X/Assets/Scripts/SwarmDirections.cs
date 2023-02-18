@@ -7,17 +7,17 @@ public class SwarmDirections : ScriptableObject
 {
     public int seed = 0;
 
-    public float startingRadius = 5f;
-    public float radiusAmplitude = 1f;
+    [HideInInspector] public float startingRadius = 5f;
+    [HideInInspector] public float radiusAmplitude = 1f;
     public float radiusChangeSineDegrees = 30f;
-    public float retreatRadius = 3f;
-    public float retreatTime = 5f;
+    [HideInInspector] public float retreatRadius = 3f;
+    [HideInInspector] public float retreatTime = 5f;
 
     public float rotationSpeedDegreesAmplitude = 30f;
     public float rotationSpeedSineDegrees = 15f;
 
     [Range(4, 16)] public int enemyGroupsToSpawn = 4;
-    public float setupTime = 2f;
+    [HideInInspector] public float setupTime = 2f;
 
     [Range(1, 4)] public int maxGroupSizePerAttack = 1;
     public float minAttackInterval = 3f;

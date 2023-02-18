@@ -53,7 +53,7 @@ public class SwarmDirector : MonoBehaviour
     {
         if (!PlayerSpawner.GetIsGameOver())
         {
-            if (!isBetweenWaves && !isSpawningEnemies && !AreEnemiesAlive() && !AreEnemiesActive() && PlayerSpawner.GetPlayerRef() != null)
+            if (!isBetweenWaves && !isSpawningEnemies && !AreEnemiesAlive() && !AreEnemiesActive() && PlayerSpawner.GetPlayerRef() != null && PlayerSpawner.GetPlayerRef().GetIsPlayerReady())
             {
                 StartCoroutine(BetweenWaves());
             }
@@ -144,6 +144,23 @@ public class SwarmDirector : MonoBehaviour
         return false;
     }
 
+    public static bool AreEnemiesAttacking()
+    {
+        GameObject[] tempRefs = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject g in tempRefs)
+        {
+            if (g != null)
+            {
+                Flierwerk tempEnemy = g.GetComponent<Flierwerk>();
+                if (tempEnemy != null && tempEnemy.GetIsAttacking())
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private IEnumerator BetweenWaves()
     {
         if (isBetweenWaves || isSpawningEnemies) { yield break; }
@@ -174,7 +191,7 @@ public class SwarmDirector : MonoBehaviour
             waveResultsHeaderText.gameObject.SetActive(false);
             resultsLivesLostText.gameObject.SetActive(false);
             resultsShotsMissedText.gameObject.SetActive(false);
-            resultsShotsMissedText.gameObject.SetActive(false);
+            resultsEscapeesText.gameObject.SetActive(false);
             resultsFinalEvaluationText.gameObject.SetActive(false);
 
             yield return ScreenFade.SetFadeLerp(0f, 1f);
@@ -185,7 +202,7 @@ public class SwarmDirector : MonoBehaviour
         currentRound++;
         
         waveTextCenter.text = $"WAVE {currentRound + 1}";
-        waveTextCorner.text = $"R{currentRound + 1}";
+        waveTextCorner.text = $"W{currentRound + 1}";
 
         waveTextCorner.gameObject.SetActive(true);
 
@@ -231,7 +248,10 @@ public class SwarmDirector : MonoBehaviour
         }
         else
         {
-            for (int i = 0; i < (dirs.maxGroupSizePerAttack > 1 ? Random.Range(1, dirs.maxGroupSizePerAttack + 1) : 1); ++i)
+            if (AreEnemiesAttacking()) { return; }
+
+            int numEnemiesToChoose = (dirs.maxGroupSizePerAttack > 1 ? Random.Range(1, dirs.maxGroupSizePerAttack + 1) : 1);
+            for (int i = 0; i < numEnemiesToChoose; ++i)
             {
                 if (enemyRefs == null || enemyRefs.Keys.Count == 0) { return; }
                 int[] tempIDs = new int[enemyRefs.Keys.Count];

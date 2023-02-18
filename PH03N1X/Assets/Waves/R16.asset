@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f8a7ad340fa7a74380f61674599ede9, type: 3}
+  m_Name: R16
+  m_EditorClassIdentifier: 
+  seed: 12
+  startingRadius: 7
+  radiusAmplitude: 0.5
+  radiusChangeSineDegrees: 110
+  retreatRadius: 3
+  retreatTime: 5
+  rotationSpeedDegreesAmplitude: 50
+  rotationSpeedSineDegrees: 60
+  enemyGroupsToSpawn: 16
+  setupTime: 2
+  maxGroupSizePerAttack: 4
+  minAttackInterval: 2
+  maxAttackInterval: 5
+  attackIntervalChange: 1.05
