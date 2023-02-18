@@ -99,10 +99,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7dbf4b5b935eb3489460f7f7a91f223, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  reticlePrefab: {fileID: 5558006921809599573, guid: bc33efb131b61194a8a916435a194c8f, type: 3}
+  directionArrowPrefab: {fileID: 4798190758302603518, guid: 2b9921f3db2913e4cb7a362c1093a7d2, type: 3}
   shrapnelPrefab: {fileID: 1347574823670010396, guid: 02ddb26041cfd424fadfa67ef3cd1fac, type: 3}
   animSprites:
   - {fileID: 21300000, guid: 675d5ee0e95276144896b6c04a27ad46, type: 3}
   - {fileID: 21300000, guid: 54512908029d4a740bbcafbe5ced656f, type: 3}
+  - {fileID: 21300000, guid: b977b3e29b940564599a604e1053a71a, type: 3}
   pointValue: 25
   spriteChangeFrameInterval: 15
   distancePortion: 0.4

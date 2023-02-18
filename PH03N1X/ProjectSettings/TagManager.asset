@@ -47,6 +47,9 @@ TagManager:
   - name: EnemySprites
     uniqueID: 3550447481
     locked: 0
+  - name: Effects
+    uniqueID: 1524901531
+    locked: 0
   - name: ProjectileSprites
     uniqueID: 2669934761
     locked: 0
