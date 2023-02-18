@@ -9,7 +9,7 @@ public class PlayerSpawner : MonoBehaviour
     [Header("Drag and Drop")]
     [SerializeField] GameObject playerPrefab;
     [SerializeField] GameObject readyText;
-    [SerializeField] Image screenFade;
+    [SerializeField] GameObject gameOverText;
     [SerializeField] GameObject grandTotalScoreText;
     [SerializeField] GameObject thisLifeScoreText;
     [SerializeField] GameObject totalAshesText;
@@ -26,8 +26,12 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] TMP_Text maxComboUpgradeText;
     [SerializeField] TMP_Text extraLifeText;
 
+    [SerializeField] GameObject lifeSymbolPrefab;
+    [SerializeField] Transform livesDisplay;
+
     [Header("Game Parameters")]
     [SerializeField, Range(1, 5)] int startingLives = 3;
+    [SerializeField, Range(5, 9)] int maxLives = 9;
     [SerializeField] int extraLifeBaseCost = 10000;
     [SerializeField] int extraLifeCostIncrement = 10000;
     [SerializeField] int maxExtraLifeCost = 70000;
@@ -51,7 +55,10 @@ public class PlayerSpawner : MonoBehaviour
     private GameObject playerRef = null;
     private static ShipControl _playerRef = null;
 
-    private bool isGameOver = false;
+    private bool canStartTheGame = true;
+
+    private bool isGameOver = true;
+    private static bool _isGameOver = true;
     private bool isUpgrading = false;
     private int livesLeft = 0;
     private int currentAshes = 0;
@@ -62,30 +69,18 @@ public class PlayerSpawner : MonoBehaviour
     void Start()
     {
         upgradeTextRefs = new TMP_Text[7] { maxBulletUpgradeText, fireRateUpgradeText, moveSpeedUpgradeText, turnSpeedUpgradeText, ashRateUpgradeText, maxComboUpgradeText, extraLifeText };
-
-        livesLeft = startingLives;
-        CheckInitialUpgradeLevels();
-        SpawnPlayer();
     }
 
     void Update()
     {
-        if (!isGameOver && playerRef == null && !isUpgrading)
+        if (canStartTheGame && Input.GetButtonDown("Submit"))
+        {
+            StartTheGame();
+        }
+
+        if (!SwarmDirector.AreEnemiesActive() && !isUpgrading && !isGameOver && playerRef == null)
         {
             StartCoroutine(UpgradePhase());
-        }
-    }
-
-    public void SpawnPlayer()
-    {
-        if (livesLeft > 0 && playerRef == null)
-        {
-            playerRef = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
-            ShipControl tempShip = playerRef.GetComponent<ShipControl>();
-            _playerRef = tempShip;
-            tempShip.SetShipParameters(maxBulletsUpgradeTable[upgradeLevels[0]], fireRateUpgradeTable[upgradeLevels[1]], moveSpeedUpgradeTable[upgradeLevels[2]], turnSpeedUpgradeTable[upgradeLevels[4]]);
-            Scorekeeper.SetMaxMultiplier(MaxComboMultiplierUpgradeTable[upgradeLevels[5]]);
-            StartCoroutine(DisplayReadyText());
         }
     }
 
@@ -100,6 +95,37 @@ public class PlayerSpawner : MonoBehaviour
     public static ShipControl GetPlayerRef()
     {
         return _playerRef;
+    }
+
+    public static bool GetIsGameOver()
+    {
+        return _isGameOver;
+    }
+
+    private void StartTheGame()
+    {
+        canStartTheGame = false;
+        isGameOver = false;
+        _isGameOver = false;
+        livesLeft = startingLives;
+        UpdateLivesDisplay();
+        CheckInitialUpgradeLevels();
+        SpawnPlayer();
+    }
+
+    private void SpawnPlayer()
+    {
+        if (livesLeft > 0 && playerRef == null)
+        {
+            livesLeft--;
+            UpdateLivesDisplay();
+            playerRef = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+            ShipControl tempShip = playerRef.GetComponent<ShipControl>();
+            _playerRef = tempShip;
+            tempShip.SetShipParameters(maxBulletsUpgradeTable[upgradeLevels[0]], fireRateUpgradeTable[upgradeLevels[1]], moveSpeedUpgradeTable[upgradeLevels[2]], turnSpeedUpgradeTable[upgradeLevels[4]]);
+            Scorekeeper.SetMaxMultiplier(MaxComboMultiplierUpgradeTable[upgradeLevels[5]]);
+            StartCoroutine(DisplayReadyText());
+        }
     }
 
     private void CheckInitialUpgradeLevels()
@@ -119,6 +145,13 @@ public class PlayerSpawner : MonoBehaviour
         readyText.SetActive(false);
     }
 
+    private IEnumerator DisplayGameOverText()
+    {
+        gameOverText.SetActive(true);
+        yield return new WaitForSeconds(5f);
+        gameOverText.SetActive(false);
+    }
+
     private IEnumerator UpgradePhase()
     {
         isUpgrading = true;
@@ -128,16 +161,7 @@ public class PlayerSpawner : MonoBehaviour
             yield return null;
         }
 
-        float currentLerp = 0f;
-        Color colorOne = new Color(0f, 0f, 0f, 0f);
-        Color colorTwo = new Color(0f, 0f, 0f, 0.8f);
-        while (currentLerp < 1f)
-        {
-            currentLerp += Time.deltaTime;
-            if (currentLerp > 1f) { currentLerp = 1f; }
-            screenFade.color = Color.Lerp(colorOne, colorTwo, currentLerp);
-            yield return null;
-        }
+        yield return ScreenFade.SetFadeLerp(0.8f, 1f);
 
         // Show this life's score and the grand total score
         grandTotalScoreText.SetActive(true);
@@ -150,13 +174,13 @@ public class PlayerSpawner : MonoBehaviour
 
         int ashesToTransfer = GetAshesFromLifeScore();
 
-        int interval = (int)Mathf.Pow(10f, Mathf.Log(Scorekeeper.GetThisLifeScore() / 10f, 10f));
+        int interval = (Scorekeeper.GetThisLifeScore() < 10 ? 1 : (int)Mathf.Pow(10f, Mathf.Log(Scorekeeper.GetThisLifeScore() / 10f, 10f)));
         while (Scorekeeper.GetThisLifeScore() > 0)
         {
             Scorekeeper.DecrementThisLifeScore(interval);
             yield return null;
         }
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
         int targetAshes = (currentAshes + ashesToTransfer);
         while (currentAshes < targetAshes)
         {
@@ -165,13 +189,9 @@ public class PlayerSpawner : MonoBehaviour
             totalAshesNumber.text = currentAshes.ToString("D7");
             yield return null;
         }
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
 
-        if (livesLeft > 0)
-        {
-            --livesLeft;
-            livesRemainingText.text = $"YOU HAVE {livesLeft} LI{(livesLeft > 1 || livesLeft == 0 ? "VES" : "FE")} REMAINING";
-        }
+        livesRemainingText.text = $"YOU HAVE {livesLeft} LI{(livesLeft > 1 || livesLeft == 0 ? "VES" : "FE")} REMAINING";
         livesRemainingText.gameObject.SetActive(true);
 
         yield return new WaitForSeconds(2f);
@@ -230,28 +250,22 @@ public class PlayerSpawner : MonoBehaviour
             }
             else if (Input.GetButtonDown("Confirm"))
             {
-                if (upgradeLevels[currentSelection] < maxUpgradeLevel)
+                bool isExtraLife = currentSelection >= (upgradeTextRefs.Length - 1);
+                int cost = (!isExtraLife ? GetUpgradeCost(upgradeLevels[currentSelection]) : GetExtraLifeCost());
+                if ((isExtraLife ? livesLeft < maxLives : upgradeLevels[currentSelection] < maxUpgradeLevel) && currentAshes >= cost)
                 {
-                    bool isExtraLife = currentSelection >= (upgradeTextRefs.Length - 1);
-                    int cost = (!isExtraLife ? GetUpgradeCost(upgradeLevels[currentSelection]) : GetExtraLifeCost());
-                    if (currentAshes >= cost)
+                    currentAshes -= cost;
+                    if (isExtraLife)
                     {
-                        currentAshes -= cost;
-                        if (isExtraLife)
-                        {
-                            livesLeft++;
-                            livesBought++;
-                        }
-                        else
-                        {
-                            upgradeLevels[currentSelection]++;
-                        }
-                        previousUpgrades.Insert(0, currentSelection);
+                        livesLeft++;
+                        livesBought++;
+                        UpdateLivesDisplay();
                     }
                     else
                     {
-                        // Buzzer sound
+                        upgradeLevels[currentSelection]++;
                     }
+                    previousUpgrades.Insert(0, currentSelection);
                 }
                 else
                 {
@@ -270,6 +284,7 @@ public class PlayerSpawner : MonoBehaviour
                         livesLeft--;
                         livesBought--;
                         currentAshes += GetExtraLifeCost();
+                        UpdateLivesDisplay();
                     }
                     else
                     {
@@ -291,13 +306,7 @@ public class PlayerSpawner : MonoBehaviour
 
 
         // Undarken the screen
-        while (currentLerp > 0f)
-        {
-            currentLerp -= Time.deltaTime;
-            if (currentLerp < 0f) { currentLerp = 0f; }
-            screenFade.color = Color.Lerp(colorOne, colorTwo, currentLerp);
-            yield return null;
-        }
+        yield return ScreenFade.SetFadeLerp(0f, 1f);
 
         // If there are lives remaining
         if (livesLeft > 0)
@@ -308,7 +317,11 @@ public class PlayerSpawner : MonoBehaviour
         else
         {
             // If not, game over
+            _isGameOver = true;
             isGameOver = true;
+            Scorekeeper.UpdateRecordedHighScore();
+            yield return StartCoroutine(DisplayGameOverText());
+            canStartTheGame = true;
         }
 
         isUpgrading = false;
@@ -340,5 +353,29 @@ public class PlayerSpawner : MonoBehaviour
         int result = (int)(Scorekeeper.GetThisLifeScore() * ScoreToAshRateUpgradeTable[upgradeLevels[4]]);
         result -= (result % 5);
         return result;
+    }
+
+    private void UpdateLivesDisplay()
+    {
+        int numLivesInDisplay = livesDisplay.childCount;
+        if (numLivesInDisplay != livesLeft)
+        {
+            if (livesLeft > numLivesInDisplay)
+            {
+                int times = (livesLeft - numLivesInDisplay);
+                for (int i = 0; i < times; ++i)
+                {
+                    Instantiate(lifeSymbolPrefab, livesDisplay);
+                }
+            }
+            else
+            {
+                int times = (numLivesInDisplay - livesLeft);
+                for (int i = 0; i < times; ++i)
+                {
+                    GameObject.Destroy(livesDisplay.GetChild(i).gameObject);
+                }
+            }
+        }
     }
 }

@@ -25,7 +25,10 @@ public class Scorekeeper : MonoBehaviour
     private static int currentCombo = 0;
     private static int currentMuliplier = 1;
     private static int maxMultiplier = 2;
-    private static bool isNoMiss = true;
+
+    private static int livesLostThisWave = 0;
+    private static int shotsMissedThisWave = 0;
+    private static int escapeesThisWave = 0;
 
     private static int thisLifeScore = 0;
     private static int grandTotalScore = 0;
@@ -33,6 +36,8 @@ public class Scorekeeper : MonoBehaviour
     private static int recordedHighScore = 20000;
 
     private static int highScoreDisplay = 0;
+
+    private bool showGrandTotal = false;
 
     void Awake()
     {
@@ -43,13 +48,18 @@ public class Scorekeeper : MonoBehaviour
 
     void Start()
     {
-        highScoreDisplay = recordedHighScore;
+        ResetHighScoreDisplay();
     }
 
     void Update()
     {
-        p1ScoreNumber.text = thisLifeScore.ToString("D7"); // TODO: Add option to toggle between score this life and grand score
+        if (!PlayerSpawner.GetIsGameOver() && Input.GetButtonDown("Toggle Score Display")){ showGrandTotal = !showGrandTotal; }
+
+        p1ScoreNumber.gameObject.SetActive(!PlayerSpawner.GetIsGameOver());
+        p1ScoreNumber.text = (PlayerSpawner.GetIsGameOver() || showGrandTotal ? grandTotalScore : thisLifeScore).ToString("D7");
         highScoreDisplayNumber.text = highScoreDisplay.ToString("D7");
+
+        comboMeter.gameObject.SetActive(!PlayerSpawner.GetIsGameOver());
         comboMeter.text = $"{new string('|', currentCombo)}x{currentMuliplier}";
 
         grandTotalScoreNumber.text = grandTotalScore.ToString("D7");
@@ -90,31 +100,68 @@ public class Scorekeeper : MonoBehaviour
         }
     }
 
-    public static void ResetIsNoMiss()
-    {
-        isNoMiss = true;
-    }
-
     public static void BreakCombo()
     {
         currentCombo = 0;
         currentMuliplier = 1;
-        isNoMiss = false;
-    }
-
-    public static void DisqualifyNoMiss()
-    {
-        isNoMiss = false;
     }
 
     public static bool GetIsNoMiss()
     {
-        return isNoMiss;
+        return (livesLostThisWave <= 0 && shotsMissedThisWave <= 0 && escapeesThisWave <= 0);
+    }
+
+    public static void IncrementLivesLost()
+    {
+        livesLostThisWave++;
+    }
+
+    public static void IncrementShotsMissed()
+    {
+        shotsMissedThisWave++;
+    }
+
+    public static void IncrementEscapees()
+    {
+        escapeesThisWave++;
+    }
+
+    public static int GetLivesLost()
+    {
+        return livesLostThisWave;
+    }
+
+    public static int GetShotsMissed()
+    {
+        return shotsMissedThisWave;
+    }
+
+    public static int GetEscapees()
+    {
+        return escapeesThisWave;
+    }
+
+    public static void ResetNoMissConditions()
+    {
+        livesLostThisWave = 0;
+        shotsMissedThisWave = 0;
+        escapeesThisWave = 0;
     }
 
     public static void ResetHighScoreDisplay()
     {
         highScoreDisplay = recordedHighScore;
+    }
+
+    public static bool UpdateRecordedHighScore()
+    {
+        if (grandTotalScore > recordedHighScore)
+        {
+            recordedHighScore = grandTotalScore;
+            ResetHighScoreDisplay();
+            return true;
+        }
+        return false;
     }
 
     public static void CheckHighScoreDisplay()

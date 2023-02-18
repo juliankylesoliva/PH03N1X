@@ -110,7 +110,7 @@ public class Flierwerk : MonoBehaviour
         }
 
         FireShrapnel();
-        Scorekeeper.DisqualifyNoMiss();
+        Scorekeeper.IncrementEscapees();
         GameObject.Destroy(this.gameObject);
         yield break;
     }

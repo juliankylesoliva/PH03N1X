@@ -67,6 +67,7 @@ public class ShipControl : MonoBehaviour
     public void KillShip()
     {
         Scorekeeper.BreakCombo();
+        Scorekeeper.IncrementLivesLost();
         GameObject.Destroy(this.gameObject);
     }
 
@@ -163,7 +164,7 @@ public class ShipControl : MonoBehaviour
 
     private bool CanFireAShot()
     {
-        return GetIsPlayerReady() && fireRateTimer <= 0f && FindEmptyBulletSlot() > -1;
+        return SwarmDirector.AreEnemiesAlive() && GetIsPlayerReady() && fireRateTimer <= 0f && FindEmptyBulletSlot() > -1;
     }
 
     private int FindEmptyBulletSlot()

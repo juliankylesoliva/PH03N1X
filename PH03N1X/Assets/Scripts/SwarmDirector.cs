@@ -1,9 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class SwarmDirector : MonoBehaviour
 {
+    [SerializeField] TMP_Text waveTextCenter;
+    [SerializeField] TMP_Text waveTextCorner;
+
+    [SerializeField] TMP_Text waveResultsHeaderText;
+    [SerializeField] TMP_Text resultsLivesLostText;
+    [SerializeField] TMP_Text resultsShotsMissedText;
+    [SerializeField] TMP_Text resultsEscapeesText;
+    [SerializeField] TMP_Text resultsFinalEvaluationText;
+
     [SerializeField] GameObject[] enemyPrefabs;
     [SerializeField] float positionDegreeOffset = 90f;
     [SerializeField] bool reversePositionDirection = true;
@@ -40,29 +51,54 @@ public class SwarmDirector : MonoBehaviour
 
     void Update()
     {
-        // TODO: If there are no enemies left, check if there was no miss, then reset and load the next wave
-        if (!isBetweenWaves && !isSpawningEnemies && !AreEnemiesAlive() && !AreEnemiesActive() && PlayerSpawner.GetPlayerRef() != null)
+        if (!PlayerSpawner.GetIsGameOver())
         {
-            StartCoroutine(BetweenWaves());
+            if (!isBetweenWaves && !isSpawningEnemies && !AreEnemiesAlive() && !AreEnemiesActive() && PlayerSpawner.GetPlayerRef() != null)
+            {
+                StartCoroutine(BetweenWaves());
+            }
+
+            if (!isBetweenWaves && !isSpawningEnemies && PlayerSpawner.GetPlayerRef() != null && PlayerSpawner.GetPlayerRef().GetIsPlayerReady()) { TryEnemyAttack(); }
+
+            if (dirs != null && positionVectors != null)
+            {
+                currentRadius = ((dirs.radiusAmplitude * Mathf.Sin(currentRadiusTheta)) + dirs.startingRadius) * Mathf.Lerp(1, dirs.retreatRadius, currentRadiusScaleLerp);
+                currentRotationSpeed = (dirs.rotationSpeedDegreesAmplitude * Mathf.Sin(currentRotationSpeedTheta) * Mathf.Deg2Rad);
+                currentRotationOffset += (currentRotationSpeed * Time.deltaTime);
+
+                UpdatePositionVectors();
+
+                currentRadiusTheta += (dirs.radiusChangeSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
+                currentRotationSpeedTheta += (dirs.rotationSpeedSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
+            }
         }
-
-        if (!isBetweenWaves && !isSpawningEnemies && PlayerSpawner.GetPlayerRef() != null && PlayerSpawner.GetPlayerRef().GetIsPlayerReady()) { TryEnemyAttack(); }
-
-        if (dirs != null)
+        else
         {
-            currentRadius = ((dirs.radiusAmplitude * Mathf.Sin(currentRadiusTheta)) + dirs.startingRadius) * Mathf.Lerp(1, dirs.retreatRadius, currentRadiusScaleLerp);
-            currentRotationSpeed = (dirs.rotationSpeedDegreesAmplitude * Mathf.Sin(currentRotationSpeedTheta) * Mathf.Deg2Rad);
-            currentRotationOffset += (currentRotationSpeed * Time.deltaTime);
-
-            UpdatePositionVectors();
-
-            currentRadiusTheta += (dirs.radiusChangeSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
-            currentRotationSpeedTheta += (dirs.rotationSpeedSineDegrees * Mathf.Deg2Rad * Time.deltaTime);
+            if (enemyRefs != null && enemyRefs.Values.Count > 0 && positionVectors != null && currentRadiusScaleLerp < 1f)
+            {
+                currentRadiusScaleLerp += (Time.deltaTime / dirs.retreatTime);
+                currentRadius = ((dirs.radiusAmplitude * Mathf.Sin(currentRadiusTheta)) + dirs.startingRadius) * Mathf.Lerp(1, dirs.retreatRadius, currentRadiusScaleLerp);
+                UpdatePositionVectors();
+                if (currentRadiusScaleLerp >= 1f)
+                {
+                    enemyRefs.Clear();
+                    positionVectors = null;
+                    GameObject[] tempEnemyRefs = GameObject.FindGameObjectsWithTag("Enemy");
+                    for (int i = 0; i < tempEnemyRefs.Length; ++i)
+                    {
+                        GameObject.Destroy(tempEnemyRefs[i]);
+                    }
+                    currentRadiusScaleLerp = 0f;
+                    waveTextCorner.gameObject.SetActive(false);
+                    currentRound = -1;
+                }
+            }
         }
     }
 
     public Vector3 GetPositionByID(int id)
     {
+        if (positionVectors == null || positionVectors[id] == null) { return Vector3.zero; }
         Vector2 resultVec = positionVectors[id];
         return new Vector3(resultVec.x, resultVec.y, 0f);
     }
@@ -91,7 +127,21 @@ public class SwarmDirector : MonoBehaviour
         }
 
         GameObject testProj = GameObject.FindWithTag("EnemyProjectile");
-        return (testProj != null);
+        GameObject testProj2 = GameObject.FindWithTag("PlayerProjectile");
+        return (testProj != null || testProj2 != null);
+    }
+
+    public static bool AreEnemiesAlive()
+    {
+        GameObject[] tempRefs = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject g in tempRefs)
+        {
+            if (g != null)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private IEnumerator BetweenWaves()
@@ -103,31 +153,55 @@ public class SwarmDirector : MonoBehaviour
 
         if (currentRound >= 0)
         {
-            if (Scorekeeper.GetIsNoMiss())
-            {
-                Scorekeeper.AddNoMiss();
-            }
+            yield return ScreenFade.SetFadeLerp(0.8f, 1f);
+
+            waveResultsHeaderText.gameObject.SetActive(true);
+            waveResultsHeaderText.text = $"WAVE {currentRound + 1} RESULTS";
+            yield return new WaitForSeconds(1f);
+            resultsLivesLostText.gameObject.SetActive(true);
+            resultsLivesLostText.text = $"  LIVES LOST:\t{Scorekeeper.GetLivesLost()}";
+            yield return new WaitForSeconds(0.5f);
+            resultsShotsMissedText.gameObject.SetActive(true);
+            resultsShotsMissedText.text = $"SHOTS MISSED:\t{Scorekeeper.GetShotsMissed()}";
+            yield return new WaitForSeconds(0.5f);
+            resultsEscapeesText.gameObject.SetActive(true);
+            resultsEscapeesText.text = $"    ESCAPEES:\t{Scorekeeper.GetEscapees()}";
+            yield return new WaitForSeconds(1.5f);
+            resultsFinalEvaluationText.gameObject.SetActive(true);
+            resultsFinalEvaluationText.text = (Scorekeeper.GetIsNoMiss() ? $"PERFECT! {Scorekeeper.AddNoMiss()} POINTS!" : "NO BONUS");
+            yield return new WaitForSeconds(3f);
+
+            waveResultsHeaderText.gameObject.SetActive(false);
+            resultsLivesLostText.gameObject.SetActive(false);
+            resultsShotsMissedText.gameObject.SetActive(false);
+            resultsShotsMissedText.gameObject.SetActive(false);
+            resultsFinalEvaluationText.gameObject.SetActive(false);
+
+            yield return ScreenFade.SetFadeLerp(0f, 1f);
         }
 
-        Scorekeeper.ResetIsNoMiss();
-
-        yield return new WaitForSeconds(2f);
+        Scorekeeper.ResetNoMissConditions();
 
         currentRound++;
-        InitializeSwarm(roundList[(currentRound < roundList.Length ? currentRound : (roundList.Length - 1))]);
+        
+        waveTextCenter.text = $"WAVE {currentRound + 1}";
+        waveTextCorner.text = $"R{currentRound + 1}";
 
+        waveTextCorner.gameObject.SetActive(true);
+
+        waveTextCenter.gameObject.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        waveTextCenter.gameObject.SetActive(false);
+
+        InitializeSwarm(roundList[(currentRound < roundList.Length ? currentRound : (roundList.Length - 1))]);
         isBetweenWaves = false;
         yield return null;
-    }
-
-    private bool AreEnemiesAlive()
-    {
-        return (enemyRefs != null && enemyRefs.Values.Count > 0);
     }
 
     private void InitializeSwarm(SwarmDirections d)
     {
         dirs = d;
+        currentRadiusScaleLerp = 0f;
 
         if (d.seed >= 0) { Random.InitState(d.seed); }
 
@@ -184,32 +258,6 @@ public class SwarmDirector : MonoBehaviour
             else { /* Nothing */ }
 
             currentAttackTimer = currentAttackInterval;
-        }
-    }
-
-    private void UpdateRadiusScaleLerp()
-    {
-        if (PlayerSpawner.GetPlayerRef() == null)
-        {
-            if (currentRadiusScaleLerp < 1f)
-            {
-                currentRadiusScaleLerp += (Time.deltaTime / dirs.retreatTime);
-                if (currentRadiusScaleLerp > 1f)
-                {
-                    currentRadiusScaleLerp = 1f;
-                }
-            }
-        }
-        else
-        {
-            if (currentRadiusScaleLerp > 0f)
-            {
-                currentRadiusScaleLerp -= (Time.deltaTime / dirs.setupTime);
-                if (currentRadiusScaleLerp < 0f)
-                {
-                    currentRadiusScaleLerp = 0f;
-                }
-            }
         }
     }
 
