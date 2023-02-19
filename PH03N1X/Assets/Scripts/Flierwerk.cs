@@ -191,10 +191,11 @@ public class Flierwerk : MonoBehaviour
 
     private void UpdateDirectionArrow()
     {
-        Vector3 resultPosition = (truePlayerPosition - (targetDirection.normalized * 1.25f));
+        Vector3 resultDirection = (this.transform.position - truePlayerPosition).normalized;
+        Vector3 resultPosition = (truePlayerPosition + (resultDirection * 1.25f));
         if (directionArrowRef == null) { directionArrowRef = Instantiate(directionArrowPrefab, resultPosition, Quaternion.identity); }
         else { directionArrowRef.transform.position = resultPosition; }
-        directionArrowRef.transform.up = (-targetDirection.normalized);
+        directionArrowRef.transform.up = resultDirection;
     }
 
     void OnCollisionEnter2D(Collision2D other)

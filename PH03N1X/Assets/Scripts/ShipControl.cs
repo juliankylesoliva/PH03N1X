@@ -30,6 +30,7 @@ public class ShipControl : MonoBehaviour
     private GameObject[] bulletRefs = null;
     private float fireRateTimer = 0f;
     private SpriteRenderer reticleRef;
+    private bool isInHitstop = false;
 
     void Awake()
     {
@@ -98,7 +99,7 @@ public class ShipControl : MonoBehaviour
 
     private void DisplayReticle()
     {
-        if (reticleRef != null && CanFireAShot())
+        if (!isInHitstop && reticleRef != null && CanFireAShot())
         {
             reticleRef.color = Color.white;
             Vector3 mouseLocation = playerCam.ScreenToWorldPoint(Input.mousePosition);
@@ -220,7 +221,9 @@ public class ShipControl : MonoBehaviour
         MusicPlayer.StopMusic();
         SoundLibrary.Play("explode_hitstop", 0.9f);
         Time.timeScale = 0f;
+        isInHitstop = true;
         yield return new WaitForSecondsRealtime(1f);
+        isInHitstop = false;
         Time.timeScale = 1f;
         SoundLibrary.Play("explode_player", 0.9f);
 
