@@ -179,7 +179,7 @@ public class SwarmDirector : MonoBehaviour
         isBetweenWaves = true;
         if (currentRound >= 0) { yield return StartCoroutine(boundaryBG.FizzleOutCR(1f)); }
         ScrollStars(6.5f, 1f);
-        yield return new WaitForSeconds(1f);
+        yield return MusicPlayer.FadeOut(1f);
 
         if (currentRound >= 0)
         {
@@ -190,15 +190,23 @@ public class SwarmDirector : MonoBehaviour
             yield return new WaitForSeconds(1f);
             resultsLivesLostText.gameObject.SetActive(true);
             resultsLivesLostText.text = $"  LIVES LOST:\t{Scorekeeper.GetLivesLost()}";
+            src.clip = SoundLibrary.GetClip("explode_hitstop");
+            src.Play();
             yield return new WaitForSeconds(0.5f);
             resultsShotsMissedText.gameObject.SetActive(true);
             resultsShotsMissedText.text = $"SHOTS MISSED:\t{Scorekeeper.GetShotsMissed()}";
+            src.clip = SoundLibrary.GetClip("player_fire");
+            src.Play();
             yield return new WaitForSeconds(0.5f);
             resultsEscapeesText.gameObject.SetActive(true);
             resultsEscapeesText.text = $"    ESCAPEES:\t{Scorekeeper.GetEscapees()}";
+            src.clip = SoundLibrary.GetClip("hit_enemy");
+            src.Play();
             yield return new WaitForSeconds(1.5f);
             resultsFinalEvaluationText.gameObject.SetActive(true);
             resultsFinalEvaluationText.text = (Scorekeeper.GetIsNoMiss() ? $"PERFECT! {Scorekeeper.AddNoMiss()} POINTS!" : "NO BONUS");
+            src.clip = SoundLibrary.GetClip((Scorekeeper.GetIsNoMiss() ? "input_start" : "input_invalid"));
+            src.Play();
             yield return new WaitForSeconds(3f);
 
             waveResultsHeaderText.gameObject.SetActive(false);
@@ -224,6 +232,7 @@ public class SwarmDirector : MonoBehaviour
         if (currentRound >= 0) { yield return StartCoroutine(boundaryBG.FadeInCR(2f)); }
         waveTextCenter.gameObject.SetActive(false);
 
+        MusicPlayer.PlayMusic();
         InitializeSwarm(roundList[(currentRound < roundList.Length ? currentRound : (roundList.Length - 1))]);
         isBetweenWaves = false;
         yield return null;
@@ -266,10 +275,6 @@ public class SwarmDirector : MonoBehaviour
 
             int numEnemiesToChoose = (dirs.maxGroupSizePerAttack > 1 ? Random.Range(1, dirs.maxGroupSizePerAttack + 1) : 1);
 
-            src.clip = SoundLibrary.GetClip("alert_4");
-            src.volume = 0.8f;
-            if (src.clip != null) { src.Play(); }
-
             for (int i = 0; i < numEnemiesToChoose; ++i)
             {
                 if (enemyRefs == null || enemyRefs.Keys.Count == 0) { return; }
@@ -279,6 +284,10 @@ public class SwarmDirector : MonoBehaviour
                 Flierwerk chosenEnemy = null;
                 enemyRefs.Remove(tempIDs[Random.Range(0, tempIDs.Length)], out chosenEnemy);
                 if (chosenEnemy == null) { return; }
+
+                src.clip = SoundLibrary.GetClip("alert_4");
+                src.volume = 0.8f;
+                if (src.clip != null) { src.Play(); }
 
                 chosenEnemy.Attack();
             }

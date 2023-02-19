@@ -217,6 +217,7 @@ public class ShipControl : MonoBehaviour
         Scorekeeper.BreakCombo();
         Scorekeeper.IncrementLivesLost();
 
+        MusicPlayer.StopMusic();
         SoundLibrary.Play("explode_hitstop", 0.9f);
         Time.timeScale = 0f;
         yield return new WaitForSecondsRealtime(1f);

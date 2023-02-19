@@ -39,11 +39,15 @@ public class Scorekeeper : MonoBehaviour
 
     private bool showGrandTotal = false;
 
+    private float highScoreResetTimer = 3f;
+
     void Awake()
     {
         _noMissBonus = noMissBonus;
         _grazePointValue = grazePointValue;
         _streakToIncreaseMultiplier = streakToIncreaseMultiplier;
+        if (PlayerPrefs.HasKey("HiScore")) { recordedHighScore = PlayerPrefs.GetInt("HiScore"); }
+        else { recordedHighScore = 20000; }
     }
 
     void Start()
@@ -53,17 +57,39 @@ public class Scorekeeper : MonoBehaviour
 
     void Update()
     {
+        ResetHighScore();
+
         if (!PlayerSpawner.GetIsGameOver() && Input.GetButtonDown("Toggle Score Display")){ showGrandTotal = !showGrandTotal; }
 
         p1ScoreNumber.gameObject.SetActive(!PlayerSpawner.GetIsGameOver());
         p1ScoreNumber.text = (PlayerSpawner.GetIsGameOver() || showGrandTotal ? grandTotalScore : thisLifeScore).ToString("D7");
-        highScoreDisplayNumber.text = highScoreDisplay.ToString("D7");
+        highScoreDisplayNumber.text = (Input.GetButton("Reset High Score") && highScoreResetTimer > 0f ? "RESET..." : highScoreDisplay.ToString("D7"));
 
         comboMeter.gameObject.SetActive(!PlayerSpawner.GetIsGameOver());
         comboMeter.text = $"{new string('|', currentCombo)}x{currentMuliplier}";
 
         grandTotalScoreNumber.text = grandTotalScore.ToString("D7");
         thisLifeScoreNumber.text = thisLifeScore.ToString("D7");
+    }
+
+    private void ResetHighScore()
+    {
+        if (Input.GetButtonDown("Reset High Score"))
+        {
+            highScoreResetTimer = 3f;
+        }
+        else if (Input.GetButton("Reset High Score"))
+        {
+            highScoreResetTimer -= Time.deltaTime;
+            if (highScoreResetTimer < 0f)
+            {
+                highScoreResetTimer = 0;
+                if (PlayerPrefs.HasKey("HiScore")) { PlayerPrefs.DeleteKey("HiScore"); }
+                recordedHighScore = 20000;
+                highScoreDisplay = 20000;
+            }
+        }
+        else { /* Nothing */ }
     }
 
     public static int AddGraze()
@@ -158,6 +184,7 @@ public class Scorekeeper : MonoBehaviour
         if (grandTotalScore > recordedHighScore)
         {
             recordedHighScore = grandTotalScore;
+            PlayerPrefs.SetInt("HiScore", recordedHighScore);
             ResetHighScoreDisplay();
             return true;
         }

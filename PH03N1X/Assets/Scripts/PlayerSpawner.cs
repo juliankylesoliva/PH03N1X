@@ -18,6 +18,8 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] TMP_Text totalAshesNumber;
     [SerializeField] TMP_Text livesRemainingText;
 
+    [SerializeField] GameObject titleInstructions;
+    [SerializeField] TMP_Text quitText;
     [SerializeField] GameObject upgradeScreen;
     [SerializeField] TMP_Text ashesUpgradeDisplayText;
     [SerializeField] TMP_Text maxBulletUpgradeText;
@@ -68,6 +70,8 @@ public class PlayerSpawner : MonoBehaviour
 
     private TMP_Text[] upgradeTextRefs;
 
+    private float quitTimer = 3f;
+
     void Awake()
     {
         src = this.gameObject.GetComponent<AudioSource>();
@@ -82,8 +86,30 @@ public class PlayerSpawner : MonoBehaviour
     {
         if (canStartTheGame && Input.GetButtonDown("Submit"))
         {
+            titleInstructions.SetActive(false);
+            src.clip = SoundLibrary.GetClip("input_start");
+            src.Play();
             StartTheGame();
         }
+        else if (Input.GetButtonDown("Quit Game"))
+        {
+            quitTimer = 3f;
+            quitText.text = "QUITTING...";
+        }
+        else if (Input.GetButton("Quit Game"))
+        {
+            quitTimer -= Time.deltaTime;
+            if (quitTimer < 0f)
+            {
+                quitTimer = 0f;
+                Application.Quit();
+            }
+        }
+        else if (Input.GetButtonUp("Quit Game"))
+        {
+            quitText.text = "HOLD [ESC] TO QUIT";
+        }
+        else { /* Nothing */ }
 
         if (!SwarmDirector.AreEnemiesActive() && !isUpgrading && !isGameOver && playerRef == null)
         {
@@ -132,7 +158,7 @@ public class PlayerSpawner : MonoBehaviour
             playerRef = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
             ShipControl tempShip = playerRef.GetComponent<ShipControl>();
             _playerRef = tempShip;
-            tempShip.SetShipParameters(maxBulletsUpgradeTable[upgradeLevels[0]], fireRateUpgradeTable[upgradeLevels[1]], moveSpeedUpgradeTable[upgradeLevels[2]], turnSpeedUpgradeTable[upgradeLevels[4]]);
+            tempShip.SetShipParameters(maxBulletsUpgradeTable[upgradeLevels[0]], fireRateUpgradeTable[upgradeLevels[1]], moveSpeedUpgradeTable[upgradeLevels[2]], turnSpeedUpgradeTable[upgradeLevels[3]]);
             Scorekeeper.SetMaxMultiplier(MaxComboMultiplierUpgradeTable[upgradeLevels[5]]);
             StartCoroutine(DisplayReadyText());
         }
@@ -205,6 +231,11 @@ public class PlayerSpawner : MonoBehaviour
         bool savingGrace = (livesLeft == 0 && currentAshes >= GetExtraLifeCost());
         livesRemainingText.text = (savingGrace ? "YOU CAN GET AN EXTRA LIFE!" : $"YOU HAVE {livesLeft} LI{(livesLeft > 1 || livesLeft == 0 ? "VES" : "FE")} REMAINING");
         livesRemainingText.gameObject.SetActive(true);
+        if (savingGrace)
+        {
+            src.clip = SoundLibrary.GetClip("input_start");
+            src.Play();
+        }
 
         yield return new WaitForSeconds(2f);
 
@@ -241,6 +272,8 @@ public class PlayerSpawner : MonoBehaviour
                 if (Input.GetButtonDown("Submit") && livesLeft > 0)
                 {
                     isPlayerFinished = true;
+                    src.clip = SoundLibrary.GetClip("input_start");
+                    src.Play();
                     continue;
                 }
                 else if ((!savingGrace || livesLeft > 0) && previousYAxis == 0f && Input.GetAxisRaw("Vertical") != 0f)
@@ -261,6 +294,9 @@ public class PlayerSpawner : MonoBehaviour
                             currentSelection = 0;
                         }
                     }
+
+                    src.clip = SoundLibrary.GetClip("input_select");
+                    src.Play();
                 }
                 else if (Input.GetButtonDown("Confirm"))
                 {
@@ -280,10 +316,14 @@ public class PlayerSpawner : MonoBehaviour
                             upgradeLevels[currentSelection]++;
                         }
                         previousUpgrades.Insert(0, currentSelection);
+
+                        src.clip = SoundLibrary.GetClip("input_confirm");
+                        src.Play();
                     }
                     else
                     {
-                        // Buzzer sound
+                        src.clip = SoundLibrary.GetClip("input_invalid");
+                        src.Play();
                     }
                 }
                 else if (Input.GetButtonDown("Cancel"))
@@ -306,10 +346,15 @@ public class PlayerSpawner : MonoBehaviour
                             upgradeLevels[selectionToUndo]--;
                             currentAshes += GetUpgradeCost(upgradeLevels[selectionToUndo]);
                         }
+
+                        src.clip = SoundLibrary.GetClip("input_undo");
+                        src.Play();
                     }
                     else
                     {
                         // Buzzer sound
+                        src.clip = SoundLibrary.GetClip("input_invalid");
+                        src.Play();
                     }
                 }
                 else { /* Nothing */ }
@@ -328,6 +373,7 @@ public class PlayerSpawner : MonoBehaviour
         {
             // Respawn player
             SpawnPlayer();
+            StartCoroutine(RestartMusic());
         }
         else
         {
@@ -336,11 +382,21 @@ public class PlayerSpawner : MonoBehaviour
             isGameOver = true;
             Scorekeeper.UpdateRecordedHighScore();
             yield return StartCoroutine(DisplayGameOverText());
+            titleInstructions.SetActive(true);
             canStartTheGame = true;
         }
 
         isUpgrading = false;
         yield return null;
+    }
+
+    private IEnumerator RestartMusic()
+    {
+        while (!_playerRef.GetIsPlayerReady())
+        {
+            yield return null;
+        }
+        MusicPlayer.PlayMusic();
     }
 
     private int GetUpgradeCost(int level)
